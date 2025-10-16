@@ -19,9 +19,29 @@ class Student(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='students_created')
     modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='students_modified')
 
+class Simulation(models.Model):
+    name = models.CharField(max_length=1000, null=False, unique=True)
+
+    creation_date_time = models.DateTimeField(auto_now_add=True)
+    modification_date_time = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='simulation_created')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='simulation_modified')
+    def __str__(self):
+        return self.name 
+
+class SimulationCompetition(models.Model):
+    simulation = models.ForeignKey(Simulation, on_delete=models.RESTRICT, related_name='simulation', null=False)
+    simulation_number = models.BigIntegerField(null= False, unique=True)
+    name = models.CharField(max_length=1000, null=False, unique=True)
+
+    creation_date_time = models.DateTimeField(auto_now_add=True)
+    modification_date_time = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='simulation_completition_created')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='simulation_completition_modified')
     
 class StudentScore(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.RESTRICT, related_name='scores')
+    student = models.ForeignKey(Student, on_delete=models.RESTRICT, related_name='scores', null=False)
+    simulation_competition = models.ForeignKey(SimulationCompetition, on_delete=models.RESTRICT, related_name='scores', null=False)
     player_id = models.BigIntegerField(null= False)
     company = models.CharField(max_length=255)
     first_name = models.CharField(max_length=255)
@@ -44,4 +64,12 @@ class StudentScore(models.Model):
     creation_date_time = models.DateTimeField(auto_now_add=True)
     modification_date_time = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='student_scores_created')
-    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='student_scores_modified')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='student_scores_modified')    
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['student', 'simulation_competition'],
+                name='unique_student_simulation_competition'
+            )
+        ]

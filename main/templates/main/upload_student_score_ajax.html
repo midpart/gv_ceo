@@ -1,0 +1,154 @@
+{% extends "main/base.html" %}
+{% load form_tags %}
+{% block title %}Import Student Score{% endblock %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-center mb-4">📤 Upload CSV or Excel</h3>
+
+                    <div class="container mt-5">
+                        <h3>Upload Excel File</h3>
+
+                        <!-- Upload Form -->
+                        <form id="uploadForm" enctype="multipart/form-data" class="mb-3">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="simulation_competition_id" class="form-label">Choose Simulation</label>
+                                <select name="simulation_competition_id" id="simulation_competition_id" class="form-select" required>
+                                    <option value="">-- Select Simulation --</option>
+                                    {% for sim in simulations %}
+                                    <option value="{{ sim.id }}">{{ sim.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="file" class="form-label">Upload CSV/Excel File</label>
+                                <input type="file" name="file" id="file" class="form-control" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Upload & Get Competition</button>
+                        </form>
+
+                        <!-- Sheet Select Section (Hidden Initially) -->
+                        <div id="competitionSection" class="mt-4" style="display:none;">
+                            <label for="selectCompetition" class="form-label">Select Competition</label>
+                            <select id="selectCompetition" class="form-select mb-3"></select>
+                            <button id="uploadScore" class="btn btn-success w-100">Upload Score</button>
+                        </div>
+
+                        <div id="message" class="mt-3"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="overlay" style="display:none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+
+{% endblock %}
+{% block script %}
+<script>
+    let uploadedFile = null;  // To keep reference to the file
+
+    $(document).ready(function () {
+        // First form - get sheet names
+        $("#uploadForm").submit(function (e) {
+            e.preventDefault();
+            $("#message").html('');
+
+            const formData = new FormData(this);
+            uploadedFile = formData.get("file"); 
+
+            $.ajax({
+                url: "{% url 'getSimulationCompetitions' %}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function(){
+                    $("#overlay").show();
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $("#selectCompetition").empty().append('<option value="">Select a competition</option>');
+                        response.competitions.forEach(obj => {
+                            const isSelected = obj.id == response.selected_id ? "selected" : "";
+                            $("#selectCompetition").append(`<option value="${obj.id}" ${isSelected} >${obj.name}</option>`);
+                        });
+                        $("#competitionSection").show();
+                    } else {
+                        $("#message").html(`<div class='alert alert-danger'>${response.error}</div>`);
+                    }
+                },
+                error: function () {
+                    $("#message").html(`<div class='alert alert-danger'>Error uploading file.</div>`);
+                },
+                complete: function(){
+                     $("#overlay").hide();
+                }
+            });
+        });
+
+        // Second form - process selected sheet
+        $("#uploadScore").click(function () {
+            $("#message").html('');
+            $('#uploadScore').attr('disabled', true);
+            const selectedCompetition = $("#selectCompetition").val();
+            const selectedSimulation = $("#simulation_competition_id").val();
+            if (!uploadedFile) {
+                $("#message").html(`<div class='alert alert-danger'>Please upload a file first.</div>`);
+                return;
+            }
+            if (!selectedCompetition) {
+                $('#uploadScore').attr('disabled', false);
+                $("#message").html(`<div class='alert alert-danger'>Please select a competition first.</div>`);
+                return;
+            }
+            if (!selectedSimulation) {
+                $('#uploadScore').attr('disabled', false);
+                $("#message").html(`<div class='alert alert-danger'>Please select a Simulation first.</div>`);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", uploadedFile);
+            formData.append("simulation_competition_id", selectedCompetition);
+            formData.append("simulation_id", selectedSimulation);
+            $.ajax({
+                url: "{% url 'processStudentScoreFile' %}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                beforeSend: function(){
+                    $("#overlay").show();
+                },
+                headers: { "X-CSRFToken": $("input[name=csrfmiddlewaretoken]").val() },
+                success: function (response) {
+                    if (response.success) {
+                        $("#message").html(`<div class='alert alert-success'>${response.message}</div>`);
+                    } else {
+                        $("#message").html(`<div class='alert alert-danger'>${response.error}</div>`);
+                    }
+                },
+                error: function () {
+                    $("#message").html(`<div class='alert alert-danger'>Error processing sheet.</div>`);
+                },
+                complete: function () {
+                    $('#overlay').hide();
+                    $('#uploadScore').attr('disabled', false);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
