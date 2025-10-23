@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 User = get_user_model()
 # Create your models here.
@@ -19,6 +21,32 @@ class Student(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='students_created')
     modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='students_modified')
 
+    def __str__(self):
+        return self.name
+
+class Team(models.Model):
+    name = models.CharField(max_length=255)
+
+    creation_date_time = models.DateTimeField(auto_now_add=True)
+    modification_date_time = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='team_created')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='team_modified')
+
+    def __str__(self):
+        return self.name
+
+class TeamMember(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.RESTRICT, related_name='team_team_member', null=False)
+    student = models.ForeignKey(Student, on_delete=models.RESTRICT, related_name='student_team_member', null=False)
+
+    creation_date_time = models.DateTimeField(auto_now_add=True)
+    modification_date_time = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='team_member_created')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='team_member_modified')
+
+    def __str__(self):
+        return f"Student: {self.student.name}, Team: {self.team.name}"
+
 class Simulation(models.Model):
     name = models.CharField(max_length=1000, null=False, unique=True)
 
@@ -26,22 +54,27 @@ class Simulation(models.Model):
     modification_date_time = models.DateTimeField(default=timezone.now)
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='simulation_created')
     modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='simulation_modified')
+    
     def __str__(self):
         return self.name 
 
-class SimulationCompetition(models.Model):
+class Market(models.Model):
     simulation = models.ForeignKey(Simulation, on_delete=models.RESTRICT, related_name='simulation', null=False)
-    simulation_number = models.BigIntegerField(null= False, unique=True)
+    market_number = models.BigIntegerField(null= False, unique=True)
     name = models.CharField(max_length=1000, null=False, unique=True)
 
     creation_date_time = models.DateTimeField(auto_now_add=True)
     modification_date_time = models.DateTimeField(default=timezone.now)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='simulation_completition_created')
-    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='simulation_completition_modified')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='market_created')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='market_modified')
+    
+    def __str__(self):
+        return f"Name: {self.name}, Number: {self.market_number}" 
     
 class StudentScore(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.RESTRICT, related_name='scores', null=False)
-    simulation_competition = models.ForeignKey(SimulationCompetition, on_delete=models.RESTRICT, related_name='scores', null=False)
+    student = models.OneToOneField(Student, on_delete=models.RESTRICT, related_name='student_scores', null=True, unique= True)
+    team = models.OneToOneField(Team, on_delete=models.RESTRICT, related_name='team_scores', null=True, unique= True)
+    market = models.ForeignKey(Market, on_delete=models.RESTRICT, related_name='market_scores', null=False, unique= False)
     player_id = models.BigIntegerField(null= False)
     company = models.CharField(max_length=255)
     first_name = models.CharField(max_length=255)
@@ -66,10 +99,28 @@ class StudentScore(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='student_scores_created')
     modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='student_scores_modified')    
 
+    def clean(self):
+        # Prevent both being null
+        if self.student is None and self.team is None:
+            raise ValidationError("Either student or team must be provided.")
+
+    def save(self, *args, **kwargs):
+        # Run model validation before saving
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        if self.student:
+            return f"Score for student: {self.student.name}"
+        elif self.team:
+            return f"Score for team: {self.team.name}"
+        return "Invalid Score (no student or team)"
+    
     class Meta:
         constraints = [
-            models.UniqueConstraint(
-                fields=['student', 'simulation_competition'],
-                name='unique_student_simulation_competition'
-            )
+            # Ensure at least one of student/team is filled
+            models.CheckConstraint(
+                check= Q(student__isnull=False) | Q(team__isnull=False),
+                name='student_or_team_required'
+            ),
         ]

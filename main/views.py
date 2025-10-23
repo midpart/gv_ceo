@@ -1,11 +1,11 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from . forms import UploadFileForm, SimulationCompetitionForm
+from . forms import UploadFileForm, MarketForm
 import pandas as pd
 from django import forms
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from . models import Student, SimulationCompetition, Simulation
+from . models import Student, Market, Simulation, StudentScore
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.conf import settings
@@ -41,7 +41,36 @@ def str_to_bigint(value):
         return int(value)
     except (ValueError, TypeError):
         return None
+
+def str_to_subscription_key_simulation_number(value):
+    try:
+       if value is not None:
+           parts = value.split("|")
+           if len(parts) == 2:
+               part1 = parts[0].strip()
+               part2 = parts[1].replace("#", "").strip()
+               return (part1, part2)
+        
+       return (None, None)
+    except (ValueError, TypeError):
+        return (None, None)
     
+def str_to_str(value):
+    try:
+        if value is not None:
+            return value.strip()
+        return value
+    except (ValueError, TypeError):
+        return None
+
+def str_remove_percentage(value):
+    try:
+        if value is not None:
+            return value.replace("%", "").strip()
+        return None
+    except Exception as e:
+        return None
+
 @csrf_exempt
 def process_sheet(request):
     if request.method == "POST" and request.FILES.get("file"):
@@ -160,9 +189,9 @@ def upload_student_file(request):
     return render(request, template_name, {'form': form})
 
 @login_required(login_url='login')
-def manage_simulation_competition(request):
-    template_name = 'main/manage_simulation_competition.html'
-    simulations = SimulationCompetition.objects.all().order_by('modification_date_time')
+def manage_market(request):
+    template_name = 'main/manage_market.html'
+    simulations = Market.objects.all().order_by('modification_date_time')
     paginator = Paginator(simulations, settings.PER_PAGE)
 
     page_number = request.GET.get('page')
@@ -171,36 +200,36 @@ def manage_simulation_competition(request):
     return render(request, template_name, {'page_obj': page_obj})
 
 @login_required(login_url='login')
-def simulation_competition_form(request, pk=None):
-    template_name = 'main/simulation_form.html'
+def market_form(request, pk=None):
+    template_name = 'main/market_form.html'
     if pk:
-        obj = get_object_or_404(SimulationCompetition, pk=pk)
+        obj = get_object_or_404(Market, pk=pk)
     else:
         obj = None
 
     if request.method == "POST":
-        form = SimulationCompetitionForm(request.POST, instance=obj)
+        form = MarketForm(request.POST, instance=obj)
         if form.is_valid():
-            competition = form.save(commit=False)
-            if not competition.pk:
-                competition.created_by = request.user
+            market = form.save(commit=False)
+            if not market.pk:
+                market.created_by = request.user
             
-            competition.modified_by = request.user
-            competition.modification_date_time = timezone.now()
-            competition.save()
-            return redirect('manageSimulations')  # redirect to list page
+            market.modified_by = request.user
+            market.modification_date_time = timezone.now()
+            market.save()
+            return redirect('manageMarkets')  # redirect to list page
     else:
-        form = SimulationCompetitionForm(instance=obj)
+        form = MarketForm(instance=obj)
 
     return render(request, template_name, {'form': form, 'obj': obj})
 
 @login_required(login_url='login')
-def delete_simulation_competition(request, pk):
+def delete_market(request, pk):
     is_success = False
     message = ""
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         try:
-            obj = get_object_or_404(SimulationCompetition, pk=pk)
+            obj = get_object_or_404(Market, pk=pk)
             obj.delete()
             is_success = True
             message = "Delete operation is successful."
@@ -232,41 +261,41 @@ def parse_file_name(filename):
     return name_array
 
 @csrf_exempt
-def get_simulation_competitions(request):
+def get_markets(request):
     if request.method == "POST" and request.FILES.get("file"):
         uploaded_file = request.FILES["file"]
         try:
             check_file(uploaded_file)
             file_name = uploaded_file.name
-            simulation_id = request.POST.get('simulation_competition_id')
+            simulation_id = request.POST.get('simulation_id')
             simulation_obj = get_object_or_404(Simulation, pk=simulation_id)
             name_array = parse_file_name(file_name)
-            simulation_number = None
+            market_number = None
             if name_array is not None and len(name_array) == 2:
-                simulation_number = str_to_bigint(name_array[0])
+                market_number = str_to_bigint(name_array[0])
                 name = name_array[1]
 
-                simulation_competition_obj = SimulationCompetition.objects.filter(simulation_number = simulation_number).first()
-                if simulation_competition_obj is None: 
-                    simulation_competition_obj = SimulationCompetition(
+                market_obj = Market.objects.filter(market_number = market_number).first()
+                if market_obj is None: 
+                    market_obj = Market(
                         simulation = simulation_obj,
-                        simulation_number = simulation_number,
+                        market_number = market_number,
                         name = name,
                         creation_date_time = timezone.now(),
                         modification_date_time = timezone.now(),
                         created_by = request.user,
                         modified_by = request.user
                     )
-                    simulation_competition_obj.save()
+                    market_obj.save()
 
-            competitions = SimulationCompetition.objects.all().order_by("simulation_number").values("id", "name")
-            selected_competition = competitions.filter(simulation_number = simulation_number).first()
-            if selected_competition is None:
+            markets = Market.objects.all().order_by("market_number").values("id", "name")
+            selected_market = markets.filter(market_number = market_number).first()
+            if selected_market is None:
                 selected_id = None
             else:
-                selected_id = selected_competition["id"]
+                selected_id = selected_market["id"]
 
-            return JsonResponse({"success": True, "competitions": list(competitions), "selected_id": selected_id})
+            return JsonResponse({"success": True, "markets": list(markets), "selected_id": selected_id})
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
     return JsonResponse({"success": False, "error": "No file uploaded."})
@@ -275,12 +304,13 @@ def get_simulation_competitions(request):
 def process_student_score_file(request):
     if request.method == "POST" and request.FILES.get("file"):
         uploaded_file = request.FILES["file"]
-        simulation_competition_id = request.POST.get("simulation_competition_id")
+        market_id = request.POST.get("market_id")
         simulation_id = request.POST.get("simulation_id")
         try:
             check_file(uploaded_file)
-            print(simulation_competition_id)
-            print(simulation_id)
+            market_obj = Market.objects.filter(simulation_id = simulation_id , id = market_id).first()
+            if market_obj is None:
+                raise (f"Unable to find Market with id : {market_id}")
 
             if uploaded_file.name.endswith('.csv'):
                     df = pd.read_csv(uploaded_file)
@@ -288,14 +318,41 @@ def process_student_score_file(request):
                 df = pd.read_excel(uploaded_file)
 
             row_count = len(df)
-            add_count = 0
-            modify_count = 0
+            all_students = Student.objects.all()
+            no_student_found_list = []
+            dublicate_student_found_list = []
+            student_with_other_market_found_list = []
+            score_obj_add_list = []
+            score_obj_update_list = []
+            now = timezone.now()
+            user = request.user
             for index, row in df.iterrows():
                 player_id = row.get('Player Id')
-                company = row.get('Company')
-                first_name = row.get('First Name')
-                last_name = row.get('Last Name')
                 subscription_key__simulation_number = row.get('GoVenture Subscription Key | Simulation Number')
+                (subscription_key_parsed, simulation_number) = str_to_subscription_key_simulation_number(subscription_key__simulation_number)
+                
+                temp_student = all_students.filter( subscription_key = subscription_key_parsed).first()
+                if temp_student is None:
+                    no_student_found_list.append(player_id)
+                    continue
+                already_exists = False
+                if len(score_obj_add_list) > 0:
+                    already_exists = any(obj.go_venture_subscription_key == subscription_key_parsed for obj in score_obj_add_list)
+                if already_exists == False and len(score_obj_update_list) > 0:
+                    already_exists = any(obj.go_venture_subscription_key == subscription_key_parsed for obj in score_obj_update_list)
+
+                if already_exists:
+                    dublicate_student_found_list.append(player_id)
+                    continue
+
+                temp_score = StudentScore.objects.filter(student_id = temp_student.id).first()
+                if temp_score is not None and temp_score.market.id != market_obj.id:
+                    student_with_other_market_found_list.append(player_id)
+                    continue
+                
+                company = str_to_str(row.get('Company'))
+                first_name = str_to_str(row.get('First Name'))
+                last_name = str_to_str(row.get('Last Name'))
                 rubric_score = row.get('Rubric Score')
                 balanced_score = row.get('Balanced Score')
                 participation = row.get('Participation')
@@ -307,55 +364,70 @@ def process_student_score_file(request):
                 period_joined = row.get('Period Joined')
                 tutorial_quiz = row.get('Tutorial Quiz')
 
-                #print(player_id)
-
-            # df = pd.read_excel(excel_file, sheet_name=sheet_name)
-            
-            # all_db_data = Student.objects.all()
-            # add_data = []
-            # update_data = []
-
-            # for index, row in df.iterrows():
-            #     studienr = row.get('Studienr')
-            #     name = row.get('Name')
-            #     emailAdress = row.get('EmailAdress')
-            #     campus = row.get('Campus')
-            #     subscriptionKey = row.get('SubscriptionKey')
-            #     marketMemberNum = row.get('MarketMemberNum')
-            #     simulationNumber = row.get('SimulationNumber')
+                player_id_parsed = str_to_bigint(player_id)
+                rubric_score_parsed = str_to_bigint(str_remove_percentage(rubric_score))
+                balanced_score_parsed = str_to_bigint(str_remove_percentage(balanced_score))
+                participation_parsed = None
+                participation_total = None
+                participation_in = None
+                if participation is not None:
+                    parts = participation.split("%")
+                    if len(parts) == 2:
+                        participation_parsed = parts[0]
+                        participation_info = parts[1]
+                        if participation_info is not None:
+                            parts = participation_info.replace("(", "").replace(")", "").split("of")
+                            if len(parts) == 2:
+                                participation_total = str_to_bigint(parts[1])
+                                participation_in = str_to_bigint(parts[0])
                 
-            #     temp_student = None
-            #     temp_student = next((s for s in all_db_data if s.subscription_key == subscriptionKey), None)
-            #     print(temp_student)
-            #     is_new = False
-            #     if temp_student is None:
-            #         is_new = True
-            #         temp_student = Student(
-            #             subscription_key = subscriptionKey,
-            #             created_by = request.user,
-            #             creation_date_time = timezone.now()
-            #         )
+                rank_score_parsed = str_to_bigint(str_remove_percentage(rank_score))
+                hr_score_parsed = str_to_bigint(str_remove_percentage(hr_score))
+                ethics_score_parsed = str_to_bigint(str_remove_percentage(ethics_score))
+                competency_quiz_parsed = str_to_bigint(str_remove_percentage(competency_quiz))
+                team_evaluation_parsed = str_to_bigint(str_remove_percentage(team_evaluation))
+                period_joined_parsed = str_to_bigint(period_joined)
+                tutorial_quiz_parsed = str_to_bigint(str_remove_percentage(tutorial_quiz))
 
-            #     temp_student.studienr = str_to_bigint(studienr)
-            #     temp_student.name = name
-            #     temp_student.email_address = emailAdress
-            #     temp_student.campus = campus
-            #     temp_student.market_member_num = str_to_bigint(marketMemberNum)
-            #     temp_student.simulation_number = str_to_bigint(simulationNumber)
-            #     temp_student.modified_by = request.user
-            #     temp_student.modification_date_time = timezone.now()
-        
-            #     if is_new:
-            #         add_data.append(temp_student)
-            #     else:
-            #         update_data.append(temp_student)
+                is_new = True
+                if temp_score is not None:
+                    is_new = False
+                else: 
+                    temp_score = StudentScore (
+                        student = temp_student,
+                        market = market_obj,
+                        creation_date_time = now,
+                        created_by = user
+                    )
+                temp_score.player_id = player_id_parsed
+                temp_score.company = company
+                temp_score.first_name = first_name
+                temp_score.last_name = last_name
+                temp_score.go_venture_subscription_key = subscription_key_parsed
+                temp_score.simulation_number = simulation_number
+                temp_score.rubric_score_percentage = rubric_score_parsed
+                temp_score.balanced_score_percentage = balanced_score_parsed
+                temp_score.participation_percentage = participation_parsed
+                temp_score.participation_total = participation_total
+                temp_score.participation_in = participation_in
+                temp_score.rank_score_percentage = rank_score_parsed
+                temp_score.hr_score_percentage = hr_score_parsed
+                temp_score.ethics_score_percentage = ethics_score_parsed
+                temp_score.competency_quiz_percentage = competency_quiz_parsed
+                temp_score.team_evaluation_percentage = team_evaluation_parsed
+                temp_score.period_joined = period_joined_parsed
+                temp_score.tutorial_quiz_percentage = tutorial_quiz_parsed
 
-            # row_count = len(df)
-            # add_count = len(add_data)
-            # modify_count = len(update_data)
+                temp_score.modification_date_time = now
+                temp_score.modified_by = user
+            
+                if is_new: 
+                    score_obj_add_list.append(temp_score)
+                else:
+                    score_obj_update_list.append(temp_score)
 
-            # if add_count > 0:
-            #     Student.objects.bulk_create(add_data, batch_size=500)
+            if len(score_obj_add_list) > 0:
+                StudentScore.objects.bulk_create(score_obj_add_list, batch_size=500)
             # if modify_count > 0:
             #     Student.objects.bulk_update(update_data, ["studienr"
             #                                               , "name"
@@ -367,9 +439,20 @@ def process_student_score_file(request):
             #                                               , "modification_date_time"
             #                                               ], batch_size=500)
 
+            additional_info = ""
+            failed_count = 0
+            if len(no_student_found_list) > 0:
+                additional_info += f", no student found {len(no_student_found_list)} [{', '.join(map(str,no_student_found_list))}]"
+                failed_count += len(no_student_found_list)
+            if len(dublicate_student_found_list) > 0:
+                additional_info += f", duplicate student found {len(dublicate_student_found_list)} [{', '.join(map(str,dublicate_student_found_list))}]"
+                failed_count += len(dublicate_student_found_list)
+            if len(student_with_other_market_found_list) > 0:
+                additional_info += f", duplicate student found {len(student_with_other_market_found_list)} [{', '.join(map(str,student_with_other_market_found_list))}]"
+                failed_count += len(student_with_other_market_found_list)
             return JsonResponse({
                 "success": True,
-                "message": f"Successfully read {row_count}, add rows {add_count}, modify rows {modify_count} rows ."
+                "message": f"Successfully read {row_count}, add rows {len(score_obj_add_list)}, modify rows {len(score_obj_update_list)} rows{additional_info}."
             })
         except Exception as e:
             return JsonResponse({"success": False, "error": f"Error reading sheet: {e}"})

@@ -37,9 +37,9 @@
               data-bs-toggle="dropdown" aria-expanded="false">
               Simulation Competition
             </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="simulationsDropdown">
-              <li><a class="dropdown-item" href="{% url 'manageSimulations' %}">Manage</a></li>
-              <li><a class="dropdown-item" href="{% url 'simulationCompetitionAdd' %}">Add More</a></li>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="marketDropdown">
+              <li><a class="dropdown-item" href="{% url 'manageMarkets' %}">Manage</a></li>
+              <li><a class="dropdown-item" href="{% url 'marketAdd' %}">Add More</a></li>
             </ul>
           </li>
 
@@ -50,8 +50,7 @@
               Students
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="studentsDropdown">
-              <li><a class="dropdown-item" href="{% url 'uploadStudentFile' %}">Upload Student</a></li>
-              <li><a class="dropdown-item" href="{% url 'uploadStudentFileAjax' %}">Upload Student Ajax</a></li>
+              <li><a class="dropdown-item" href="{% url 'uploadStudentFileAjax' %}">Upload Student</a></li>
               <li><a class="dropdown-item" href="{% url 'uploadStudentScoreAjax' %}#">Student Scores</a></li>
               <li><a class="dropdown-item" href="#">Student List</a></li>
             </ul>

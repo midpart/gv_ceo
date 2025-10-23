@@ -29,8 +29,8 @@ class SimulationAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
     list_per_page = settings.PER_PAGE
 
-@admin.register(SimulationCompetition)
-class SimulationCompetitionAdmin(admin.ModelAdmin):
+@admin.register(Market)
+class MarketAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if not obj.pk:
             obj.created_by = request.user
@@ -38,6 +38,19 @@ class SimulationCompetitionAdmin(admin.ModelAdmin):
         obj.modification_date_time = timezone.now()
         return super().save_model(request, obj, form, change)
     
-    list_display = ('id', 'simulation', 'simulation_number', 'name', 'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
+    list_display = ('id', 'simulation', 'market_number', 'name', 'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
     list_per_page = settings.PER_PAGE
     list_filter = ('simulation',)
+
+@admin.register(StudentScore)
+class StudentScoreAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.created_by = request.user
+        obj.modified_by = request.user
+        obj.modification_date_time = timezone.now()
+        return super().save_model(request, obj, form, change)
+    
+    list_display = ('id', 'student', 'team', 'market', 'player_id', 'company', 'first_name',  'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
+    list_per_page = settings.PER_PAGE
+    list_filter = ('market',)    

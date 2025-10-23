@@ -17,8 +17,8 @@
                         <form id="uploadForm" enctype="multipart/form-data" class="mb-3">
                             {% csrf_token %}
                             <div class="mb-3">
-                                <label for="simulation_competition_id" class="form-label">Choose Simulation</label>
-                                <select name="simulation_competition_id" id="simulation_competition_id" class="form-select" required>
+                                <label for="simulation_id" class="form-label">Choose Simulation</label>
+                                <select name="simulation_id" id="simulation_id" class="form-select" required>
                                     <option value="">-- Select Simulation --</option>
                                     {% for sim in simulations %}
                                     <option value="{{ sim.id }}">{{ sim.name }}</option>
@@ -29,13 +29,13 @@
                                 <label for="file" class="form-label">Upload CSV/Excel File</label>
                                 <input type="file" name="file" id="file" class="form-control" required>
                             </div>
-                            <button type="submit" class="btn btn-primary w-100">Upload & Get Competition</button>
+                            <button type="submit" class="btn btn-primary w-100">Upload & Get Market</button>
                         </form>
 
                         <!-- Sheet Select Section (Hidden Initially) -->
-                        <div id="competitionSection" class="mt-4" style="display:none;">
-                            <label for="selectCompetition" class="form-label">Select Competition</label>
-                            <select id="selectCompetition" class="form-select mb-3"></select>
+                        <div id="marketSection" class="mt-4" style="display:none;">
+                            <label for="selectMarket" class="form-label">Select Market</label>
+                            <select id="selectMarket" class="form-select mb-3"></select>
                             <button id="uploadScore" class="btn btn-success w-100">Upload Score</button>
                         </div>
 
@@ -69,7 +69,7 @@
             uploadedFile = formData.get("file"); 
 
             $.ajax({
-                url: "{% url 'getSimulationCompetitions' %}",
+                url: "{% url 'getMarkets' %}",
                 type: "POST",
                 data: formData,
                 processData: false,
@@ -79,12 +79,12 @@
                 },
                 success: function (response) {
                     if (response.success) {
-                        $("#selectCompetition").empty().append('<option value="">Select a competition</option>');
-                        response.competitions.forEach(obj => {
+                        $("#selectMarket").empty().append('<option value="">Select a market</option>');
+                        response.markets.forEach(obj => {
                             const isSelected = obj.id == response.selected_id ? "selected" : "";
-                            $("#selectCompetition").append(`<option value="${obj.id}" ${isSelected} >${obj.name}</option>`);
+                            $("#selectMarket").append(`<option value="${obj.id}" ${isSelected} >${obj.name}</option>`);
                         });
-                        $("#competitionSection").show();
+                        $("#marketSection").show();
                     } else {
                         $("#message").html(`<div class='alert alert-danger'>${response.error}</div>`);
                     }
@@ -102,15 +102,15 @@
         $("#uploadScore").click(function () {
             $("#message").html('');
             $('#uploadScore').attr('disabled', true);
-            const selectedCompetition = $("#selectCompetition").val();
-            const selectedSimulation = $("#simulation_competition_id").val();
+            const selectedMarket = $("#selectMarket").val();
+            const selectedSimulation = $("#simulation_id").val();
             if (!uploadedFile) {
                 $("#message").html(`<div class='alert alert-danger'>Please upload a file first.</div>`);
                 return;
             }
-            if (!selectedCompetition) {
+            if (!selectedMarket) {
                 $('#uploadScore').attr('disabled', false);
-                $("#message").html(`<div class='alert alert-danger'>Please select a competition first.</div>`);
+                $("#message").html(`<div class='alert alert-danger'>Please select a market first.</div>`);
                 return;
             }
             if (!selectedSimulation) {
@@ -121,7 +121,7 @@
 
             const formData = new FormData();
             formData.append("file", uploadedFile);
-            formData.append("simulation_competition_id", selectedCompetition);
+            formData.append("market_id", selectedMarket);
             formData.append("simulation_id", selectedSimulation);
             $.ajax({
                 url: "{% url 'processStudentScoreFile' %}",
