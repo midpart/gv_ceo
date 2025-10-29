@@ -15,6 +15,8 @@ class Student(models.Model):
     subscription_key = models.CharField(max_length=255, null=False, unique=True)
     market_member_num = models.IntegerField(null=False, default=0)
     simulation_number = models.BigIntegerField(null=True, blank=True)
+    age_in_year = models.IntegerField(null=True, blank=True)
+    gender = models.CharField(max_length=10, null=True, blank=True)
 
     creation_date_time = models.DateTimeField(auto_now_add=True)
     modification_date_time = models.DateTimeField(default=timezone.now)
@@ -70,6 +72,9 @@ class Market(models.Model):
     
     def __str__(self):
         return f"Name: {self.name}, Number: {self.market_number}" 
+    
+    class Meta:
+        ordering = ['name']
     
 class StudentScore(models.Model):
     student = models.OneToOneField(Student, on_delete=models.RESTRICT, related_name='student_scores', null=True, unique= True)

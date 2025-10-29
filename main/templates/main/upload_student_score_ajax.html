@@ -61,6 +61,10 @@
 
     $(document).ready(function () {
         // First form - get sheet names
+        $("#file").on("change", function(){
+             $("#selectMarket").empty().append('<option value="">Select a market</option>');
+        });
+
         $("#uploadForm").submit(function (e) {
             e.preventDefault();
             $("#message").html('');
@@ -86,7 +90,7 @@
                         });
                         $("#marketSection").show();
                     } else {
-                        $("#message").html(`<div class='alert alert-danger'>${response.error}</div>`);
+                        $("#message").html(`<div class='alert alert-danger'>${response.error.replace(/\n/g, "<br>")}</div>`);
                     }
                 },
                 error: function () {
@@ -135,9 +139,9 @@
                 headers: { "X-CSRFToken": $("input[name=csrfmiddlewaretoken]").val() },
                 success: function (response) {
                     if (response.success) {
-                        $("#message").html(`<div class='alert alert-success'>${response.message}</div>`);
+                        $("#message").html(`<div class='alert alert-success'>${response.message.replace(/\n/g, "<br>")}</div>`);
                     } else {
-                        $("#message").html(`<div class='alert alert-danger'>${response.error}</div>`);
+                        $("#message").html(`<div class='alert alert-danger'>${response.error.replace(/\n/g, "<br>")}</div>`);
                     }
                 },
                 error: function () {

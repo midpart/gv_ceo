@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from . forms import UploadFileForm, MarketForm
+from . query import get_student_score_report, get_all_campus
 import pandas as pd
 from django import forms
 from django.http import JsonResponse
@@ -10,6 +11,8 @@ from django.utils import timezone
 from django.core.paginator import Paginator
 from django.conf import settings
 import re
+import openpyxl
+from django.http import HttpResponse
 
 # Create your views here.
 
@@ -86,16 +89,17 @@ def process_sheet(request):
 
             for index, row in df.iterrows():
                 studienr = row.get('Studienr')
-                name = row.get('Name')
-                emailAdress = row.get('EmailAdress')
-                campus = row.get('Campus')
+                name = str_to_str(row.get('Name'))
+                emailAdress = str_to_str(row.get('EmailAdress'))
+                campus = str_to_str(row.get('Campus'))
                 subscriptionKey = row.get('SubscriptionKey')
                 marketMemberNum = row.get('MarketMemberNum')
                 simulationNumber = row.get('SimulationNumber')
+                age = row.get('Age')
+                gender = str_to_str(row.get('Gender'))
                 
                 temp_student = None
                 temp_student = next((s for s in all_db_data if s.subscription_key == subscriptionKey), None)
-                print(temp_student)
                 is_new = False
                 if temp_student is None:
                     is_new = True
@@ -111,6 +115,8 @@ def process_sheet(request):
                 temp_student.campus = campus
                 temp_student.market_member_num = str_to_bigint(marketMemberNum)
                 temp_student.simulation_number = str_to_bigint(simulationNumber)
+                temp_student.age_in_year = str_to_bigint(age)
+                temp_student.gender = gender
                 temp_student.modified_by = request.user
                 temp_student.modification_date_time = timezone.now()
         
@@ -132,6 +138,8 @@ def process_sheet(request):
                                                           , "campus"
                                                           , "market_member_num"
                                                           , "simulation_number"
+                                                          , "age_in_year"
+                                                          , "gender"
                                                           , "modified_by"
                                                           , "modification_date_time"
                                                           ], batch_size=500)
@@ -288,7 +296,7 @@ def get_markets(request):
                     )
                     market_obj.save()
 
-            markets = Market.objects.all().order_by("market_number").values("id", "name")
+            markets = Market.objects.filter(simulation_id = simulation_id).order_by("name").values("id", "name")
             selected_market = markets.filter(market_number = market_number).first()
             if selected_market is None:
                 selected_id = None
@@ -306,12 +314,14 @@ def process_student_score_file(request):
         uploaded_file = request.FILES["file"]
         market_id = request.POST.get("market_id")
         simulation_id = request.POST.get("simulation_id")
+        filename = ""
         try:
             check_file(uploaded_file)
             market_obj = Market.objects.filter(simulation_id = simulation_id , id = market_id).first()
             if market_obj is None:
                 raise (f"Unable to find Market with id : {market_id}")
 
+            filename = uploaded_file.name
             if uploaded_file.name.endswith('.csv'):
                     df = pd.read_csv(uploaded_file)
             elif uploaded_file.name.endswith(('.xls', '.xlsx')):
@@ -428,16 +438,27 @@ def process_student_score_file(request):
 
             if len(score_obj_add_list) > 0:
                 StudentScore.objects.bulk_create(score_obj_add_list, batch_size=500)
-            # if modify_count > 0:
-            #     Student.objects.bulk_update(update_data, ["studienr"
-            #                                               , "name"
-            #                                               , "email_address"
-            #                                               , "campus"
-            #                                               , "market_member_num"
-            #                                               , "simulation_number"
-            #                                               , "modified_by"
-            #                                               , "modification_date_time"
-            #                                               ], batch_size=500)
+            if len(score_obj_update_list) > 0:
+                StudentScore.objects.bulk_update(score_obj_update_list, ["player_id"
+                                                          , "company"
+                                                          , "first_name"
+                                                          , "last_name"
+                                                          , "simulation_number"
+                                                          , "rubric_score_percentage"
+                                                          , "balanced_score_percentage"
+                                                          , "participation_percentage"
+                                                          , "participation_total"
+                                                          , "participation_in"
+                                                          , "rank_score_percentage"
+                                                          , "hr_score_percentage"
+                                                          , "ethics_score_percentage"
+                                                          , "competency_quiz_percentage"
+                                                          , "team_evaluation_percentage"
+                                                          , "period_joined"
+                                                          , "tutorial_quiz_percentage"
+                                                          , "modified_by"
+                                                          , "modification_date_time"
+                                                          ], batch_size=500)
 
             additional_info = ""
             failed_count = 0
@@ -452,8 +473,103 @@ def process_student_score_file(request):
                 failed_count += len(student_with_other_market_found_list)
             return JsonResponse({
                 "success": True,
-                "message": f"Successfully read {row_count}, add rows {len(score_obj_add_list)}, modify rows {len(score_obj_update_list)} rows{additional_info}."
+                "message": f"Successfully read {row_count}, add rows {len(score_obj_add_list)}, modify rows {len(score_obj_update_list)} rows{additional_info}. \nFrom file {filename}"
             })
         except Exception as e:
             return JsonResponse({"success": False, "error": f"Error reading sheet: {e}"})
     return JsonResponse({"success": False, "error": "Missing file or sheet name."})    
+
+@login_required(login_url='login')
+def student_score_report(request):
+    template_name = 'main/student_score_report.html'
+    error_message = ""
+    rows = []
+    total_rows = 0
+    page_obj = None
+    simulation_list = None
+    filters = {}
+    campus_list = None
+    market_list = None
+    try:
+        per_page = request.GET.get("per_page", settings.PER_PAGE)
+        simulation_id = request.GET.get("simulation_id", None)
+        market_id = request.GET.get("market_id", None)
+        filters = get_filter(request)
+        simulation_list = Simulation.objects.all()
+        campus_list = get_all_campus()
+        if simulation_id:
+            market_list = Market.objects.filter(simulation_id = simulation_id).all()
+        elif market_id:
+            market_list = Market.objects.all()
+
+        rows = get_student_score_report(filters)
+        paginator = Paginator(rows, per_page)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        total_rows = paginator.count
+    except Exception as e:
+        error_message = e
+    return render(request, template_name, {"page_obj": page_obj, "filters": filters
+                                           , "total_rows": total_rows, "simulation_list": simulation_list, "market_list": market_list
+                                           , "error_message": error_message, "campus_list" : campus_list})
+
+@csrf_exempt
+def get_markets_list(request):
+    is_success = False
+    error_message = ""
+    market_obj = []
+    if request.method == "POST":
+        try:
+            simulation_id = request.POST.get('simulation_id')
+            if simulation_id:
+                market_obj = Market.objects.filter(simulation_id = simulation_id).all()
+            else:
+                market_obj = Market.objects.all()
+            market_obj = list(market_obj.values("id", "name"))
+            is_success = True
+        except Exception as e:
+            error_message = str(e)
+    return JsonResponse({"success": is_success, "error": error_message, "markets": list(market_obj)})
+
+def get_filter(request):
+    filters = {
+            "report_type": request.GET.get("report_type", 1),
+            "student_name": request.GET.get("student_name", "").strip(),
+            "gender": request.GET.get("gender", ""), 
+            "campus": request.GET.get("campus", ""), 
+            "simulation_id": request.GET.get("simulation_id", None),
+            "market_id": request.GET.get("market_id", None),
+            "age_from": request.GET.get("age_from", None),
+            "age_to": request.GET.get("age_to", None),
+            "per_page": request.GET.get("per_page", settings.PER_PAGE),
+        }
+    return filters
+
+@login_required(login_url='login')
+def student_score_report_xlx(request):
+    # Get your filtered data
+    rows = []
+    filters = get_filter(request)
+    rows = get_student_score_report(filters)
+
+    # Create workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Students"
+
+    # Add header
+    ws.append(["ID", "Name"])
+
+    # Add data
+    for row in rows:
+        #ws.append(row)
+        ws.append([row["id"], row["name"]])
+
+    # Prepare response
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="students.xlsx"'
+
+    wb.save(response)
+    return response

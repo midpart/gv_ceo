@@ -7,11 +7,11 @@ from django.utils import timezone
 # admin.site.register(Student)
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'studienr', 'name', 'email_address'
+    list_display = ('id', 'studienr', 'name', 'age_in_year', 'gender', 'email_address'
                     , 'campus', 'subscription_key', 'market_member_num'
                     , 'simulation_number', 'creation_date_time', 'created_by')  
-    search_fields = ('name', 'studienr', 'subscription_key')
-    list_filter = ('campus',)
+    search_fields = ('name', 'studienr', 'subscription_key', 'age_in_year')
+    list_filter = ('campus', 'gender',)
     list_per_page = settings.PER_PAGE
 
     def has_add_permission(self, request):
@@ -51,6 +51,6 @@ class StudentScoreAdmin(admin.ModelAdmin):
         obj.modification_date_time = timezone.now()
         return super().save_model(request, obj, form, change)
     
-    list_display = ('id', 'student', 'team', 'market', 'player_id', 'company', 'first_name',  'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
+    list_display = ('id', 'student', 'team', 'market', 'player_id', 'company', 'first_name', 'rubric_score_percentage',  'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
     list_per_page = settings.PER_PAGE
     list_filter = ('market',)    

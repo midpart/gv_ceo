@@ -17,4 +17,7 @@ urlpatterns = [
     path('upload_student_score_file_ajax/', views.upload_student_score_file_ajax, name='uploadStudentScoreAjax'),
     path('get_markets/', views.get_markets, name='getMarkets'),
     path('process_student_score_file/', views.process_student_score_file, name='processStudentScoreFile'),
+    path('student_score_report/', views.student_score_report, name='studentScoreReport'),
+    path('get_markets_list/', views.get_markets_list, name='getMarketsList'),
+    path('student_score_report_xlx/', views.student_score_report_xlx, name='studentScoreReportXlx'),
 ]
