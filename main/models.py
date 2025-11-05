@@ -25,30 +25,7 @@ class Student(models.Model):
 
     def __str__(self):
         return self.name
-
-class Team(models.Model):
-    name = models.CharField(max_length=255)
-
-    creation_date_time = models.DateTimeField(auto_now_add=True)
-    modification_date_time = models.DateTimeField(default=timezone.now)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='team_created')
-    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='team_modified')
-
-    def __str__(self):
-        return self.name
-
-class TeamMember(models.Model):
-    team = models.ForeignKey(Team, on_delete=models.RESTRICT, related_name='team_team_member', null=False)
-    student = models.ForeignKey(Student, on_delete=models.RESTRICT, related_name='student_team_member', null=False)
-
-    creation_date_time = models.DateTimeField(auto_now_add=True)
-    modification_date_time = models.DateTimeField(default=timezone.now)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='team_member_created')
-    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='team_member_modified')
-
-    def __str__(self):
-        return f"Student: {self.student.name}, Team: {self.team.name}"
-
+    
 class Simulation(models.Model):
     name = models.CharField(max_length=1000, null=False, unique=True)
 
@@ -75,6 +52,36 @@ class Market(models.Model):
     
     class Meta:
         ordering = ['name']
+
+class Team(models.Model):
+    simulation = models.ForeignKey(Simulation, on_delete=models.RESTRICT, related_name='team_simulation', null=True)
+    name = models.CharField(max_length=255)
+    team_id = models.IntegerField(null=False, default=0)
+    sim_team_id = models.CharField(max_length=255, null=True)
+    is_mmf = models.BooleanField(default=False)
+    is_3pt = models.BooleanField(default=False)
+    is_fix_alloc = models.BooleanField(default=False)
+
+    creation_date_time = models.DateTimeField(auto_now_add=True)
+    modification_date_time = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='team_created')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='team_modified')
+
+    def __str__(self):
+        return self.name
+
+class TeamMember(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.RESTRICT, related_name='team_team_member', null=False)
+    student = models.ForeignKey(Student, on_delete=models.RESTRICT, related_name='student_team_member', null=False)
+    role = models.CharField(max_length=255)
+
+    creation_date_time = models.DateTimeField(auto_now_add=True)
+    modification_date_time = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='team_member_created')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='team_member_modified')
+
+    def __str__(self):
+        return f"Student: {self.student.name}, Team: {self.team.name}"
     
 class StudentScore(models.Model):
     student = models.OneToOneField(Student, on_delete=models.RESTRICT, related_name='student_scores', null=True, unique= True)
@@ -129,3 +136,21 @@ class StudentScore(models.Model):
                 name='student_or_team_required'
             ),
         ]
+
+
+class ImportFileLog(models.Model):
+    name = models.CharField(max_length=1000, null=False, unique=False)
+    remarks = models.CharField(max_length=5000, null=False, unique=False)
+    total_row = models.IntegerField(default=0)
+    total_insert = models.IntegerField(default=0)
+    total_update = models.IntegerField(default=0)
+    total_not_found = models.IntegerField(default=0)
+    total_duplicate_found = models.IntegerField(default=0)
+
+    creation_date_time = models.DateTimeField(auto_now_add=True)
+    modification_date_time = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='import_file_log_created')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='import_file_log_modified')
+    
+    def __str__(self):
+        return self.name 

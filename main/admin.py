@@ -53,4 +53,21 @@ class StudentScoreAdmin(admin.ModelAdmin):
     
     list_display = ('id', 'student', 'team', 'market', 'player_id', 'company', 'first_name', 'rubric_score_percentage',  'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
     list_per_page = settings.PER_PAGE
-    list_filter = ('market',)    
+    list_filter = ('market',)
+    
+@admin.register(ImportFileLog)
+class ImportFileLogAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.created_by = request.user
+        obj.modified_by = request.user
+        obj.modification_date_time = timezone.now()
+        return super().save_model(request, obj, form, change)
+    
+    list_display = ('id', 'name', 'total_row', 'total_insert', 'total_update', 'total_not_found', 'total_duplicate_found', 'remarks'
+                    , 'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
+    list_per_page = settings.PER_PAGE
+    list_filter = ('name',)
+
+    def has_add_permission(self, request):
+        return False

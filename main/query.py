@@ -24,14 +24,18 @@ SELECT
 	, sc.student_id 
 	, sc.team_id 
 	, m.name AS market_name
+    , stu.studienr 
 	, stu.name 
 	, stu.age_in_year AS age
-	, stu.gender 
+	, stu.gender
+    , stu.email_address 
 	, stu.campus 
 	, sc.go_venture_subscription_key 
 	, sc.simulation_number AS go_venture_simulation_number
 	, stu.subscription_key 
 	, stu.simulation_number 
+    , sc.player_id 
+    , sc.company
 	, sc.rubric_score_percentage 
 	, sc.balanced_score_percentage 
 	, sc.participation_percentage 
