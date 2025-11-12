@@ -71,3 +71,37 @@ class ImportFileLogAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+    
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.created_by = request.user
+        obj.modified_by = request.user
+        obj.modification_date_time = timezone.now()
+        return super().save_model(request, obj, form, change)
+    
+    list_display = ('id', 'name', 'simulation', 'teamID', 'sim_team_id', 'is_mmf', 'is_3pt', 'is_fix_alloc'
+                    , 'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
+    list_per_page = settings.PER_PAGE
+    list_filter = ('simulation', 'is_mmf', 'is_3pt', 'is_fix_alloc',)
+
+    def has_add_permission(self, request):
+        return False        
+    
+@admin.register(TeamMember)
+class TeamMemberAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.created_by = request.user
+        obj.modified_by = request.user
+        obj.modification_date_time = timezone.now()
+        return super().save_model(request, obj, form, change)
+    
+    list_display = ('id', 'team', 'student', 'role', 'teammember_order'
+                    , 'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
+    list_per_page = settings.PER_PAGE
+    list_filter = ('team', 'role',)
+
+    def has_add_permission(self, request):
+        return False    

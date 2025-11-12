@@ -54,6 +54,7 @@
               <li><a class="dropdown-item" href="{% url 'uploadStudentScore' %}">Upload Student Scores</a></li>
               <li><a class="dropdown-item" href="{% url 'uploadTeamFile' %}">Upload Team</a></li>
               <li><a class="dropdown-item" href="{% url 'studentScoreReport' %}">Score Report</a></li>
+              <li><a class="dropdown-item" href="{% url 'teamMemberReport' %}">Team Member Report</a></li>
             </ul>
           </li>
 
@@ -63,6 +64,10 @@
               {% csrf_token %}
               <button type="submit" class="nav-link btn btn-link">Logout</button>
             </form>
+          </li>
+
+          <li class="nav-item">
+            <a class="btn btn-outline-light" href="{% url 'admin:index' %}" target="_blank">Go to Admin</a>
           </li>
           {% else %}
           <li class="nav-item">

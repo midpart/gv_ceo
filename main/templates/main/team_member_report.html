@@ -1,0 +1,209 @@
+{% extends "main/base.html" %}
+{% load form_tags %}
+{% block title %}Team Member Report{% endblock %}
+{% block content %}
+
+<div class="container mt-5">
+    <h2 class="mb-4">Team Member Report</h2>
+    
+    <div id="alert-container">
+        {% if error_message %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ error_message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="container my-3">
+        <button class="btn btn-primary mb-2" type="button" id="filterToggleBtn" data-bs-toggle="collapse" data-bs-target="#filterPanel" aria-expanded="true" aria-controls="filterPanel">
+            Show Filters
+        </button>
+
+        <div class="collapse show" id="filterPanel">
+            <div class="card card-body">
+            <form method="get" action="" id="filterForm">
+                <div class="row g-3">
+                    <div class="col-md-2">
+                        <label for="simulation_ids" class="form-label">Simulation</label>
+                        <select class="form-select" name="simulation_ids" id="simulation_ids" multiple >
+                            <option value="">All</option>
+                            {% if simulation_list %}
+                                {% for simulation in simulation_list %}
+                                    <option value="{{simulation.id}}" {% if simulation.id|stringformat:"s" in filters.simulation_ids %}selected{% endif %}>{{simulation.name}}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="campus" class="form-label">Campus</label>
+                        <select class="form-select" name="campus" id="campus">
+                            <option value="">All</option>
+                            {% if campus_list %}
+                                {% for campus in campus_list %}
+                                    <option value="{{campus.campus}}" {% if filters.campus == campus.campus %}selected{% endif %}>{{campus.campus}}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="teamID" class="form-label">TeamID</label>
+                        <input type="number" class="form-control" name="teamID" id="teamID" value="{{ filters.teamID }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="student_name" class="form-label">Student Name</label>
+                        <input type="text" class="form-control" name="student_name" id="student_name" value="{{ filters.student_name }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="is_3pt" class="form-label">Is 3PT</label>
+                        <select class="form-select" name="is_3pt" id="is_3pt">
+                            <option value="-1">All</option>
+                            <option value="1" {% if filters.is_3pt == '1' %}selected{% endif %}>Yes</option>
+                            <option value="0" {% if filters.is_3pt == '0' %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="is_fix_alloc" class="form-label">Is Fix Alloc</label>
+                        <select class="form-select" name="is_fix_alloc" id="is_fix_alloc">
+                            <option value="-1">All</option>
+                            <option value="1" {% if filters.is_fix_alloc == '1' %}selected{% endif %}>Yes</option>
+                            <option value="0" {% if filters.is_fix_alloc == '0' %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="is_mmf" class="form-label">Is MMF</label>
+                        <select class="form-select" name="is_mmf" id="is_mmf">
+                            <option value="-1">All</option>
+                            <option value="1" {% if filters.is_mmf == '1' %}selected{% endif %}>Yes</option>
+                            <option value="0" {% if filters.is_mmf == '0' %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="per_page" class="form-label">Per Page Item</label>
+                        <input type="number" class="form-control" name="per_page" id="per_page" value="{{ filters.per_page }}">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success me-2">Apply Filters</button>
+                        <a href="?" class="btn btn-secondary me-2">Reset</a>
+                    </div>
+                </div>
+            </form>
+            </div>
+        </div>
+        </div>
+
+    <p>Total students: {{ total_rows }}</p>
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped" id="marketTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>Sl</th>
+                    <th>Campus</th>
+                    <th>Student</th>
+                    <th>Gender</th>
+                    <th>Age</th>
+                    <th>TeamID</th>
+                    <th>Team Name</th>
+                    <th>Sim TeamID</th>
+                    <th>Role</th>
+                    <th>3PT?</th>
+                    <th>Fix Alloc?</th>
+                    <th>MMF?</th>
+                    <th>Simulation Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for obj in page_obj %}
+                <tr id="item-row-{{ obj.id }}">
+                    <td>{{ forloop.counter0|add:page_obj.start_index|add:-0 }}</td>
+                    <td>{{ obj.campus }}</td>
+                    <td>{{ obj.student_name }}</td>
+                    <td>{{ obj.gender }}</td>
+                    <td>{{ obj.age }}</td>
+                    <td>{{ obj.teamID }}</td>
+                    <td>{{ obj.team_name }}</td>
+                    <td>{{ obj.sim_team_id }}</td>
+                    <td>{{ obj.role }}</td>
+                    <td>{{ obj.is_3pt }}</td>
+                    <td>{{ obj.is_fix_alloc }}</td>
+                    <td>{{ obj.is_mmf }}</td>
+                    <td title="{{ obj.simulation_name }}">{{ obj.simulation_name|slice:":10" }}{% if obj.simulation_name|length > 6 %}…{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="10" class="text-center">No item found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <!-- Pagination -->
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+
+<div id="overlay" style="display:none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block script %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () {
+         $('#simulation_ids').select2({
+            placeholder: "Select Simulations",
+            allowClear: true
+        });
+
+        var $filterPanel = $('#filterPanel');
+        var $toggleBtn = $('#filterToggleBtn');
+
+        // Bootstrap 5 collapse events
+        $filterPanel.on('show.bs.collapse', function () {
+            $toggleBtn.text('Hide Filters');
+        });
+
+        $filterPanel.on('hide.bs.collapse', function () {
+            $toggleBtn.text('Show Filters');
+        });
+
+        // Initial text based on panel state
+        if ($filterPanel.hasClass('show')) {
+            $toggleBtn.text('Hide Filters');
+        } else {
+            $toggleBtn.text('Show Filters');
+        }
+    });
+
+</script>
+{% endblock %}

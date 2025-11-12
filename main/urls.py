@@ -26,4 +26,5 @@ urlpatterns = [
 
     path('upload_team_file/', team_views.upload_team_file, name='uploadTeamFile'),
     path('process_team_file_sheet/', team_views.process_team_file_sheet, name='processTeamFileSheet'),
+    path('team_member_report/', team_views.team_member_report, name='teamMemberReport'),
 ]

@@ -7,7 +7,7 @@ import pandas as pd
 from django import forms
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Student, Market, Simulation, StudentScore, ImportFileLog
+from .models import Student, Market, Simulation, StudentScore, Team, TeamMember
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.conf import settings
@@ -70,12 +70,19 @@ def process_student_score_file(request):
         uploaded_file = request.FILES["file"]
         market_id = request.POST.get("market_id")
         simulation_id = request.POST.get("simulation_id")
+        is_team = request.POST.get("is_team")
         filename = ""
         try:
+            is_team_options = ["1", "0"]
+            if is_team is None:
+                raise ValueError (f"Please select is team option")
+            elif is_team not in is_team_options:
+                raise ValueError (f"invalid team option")
+
             check_file(uploaded_file)
             market_obj = Market.objects.filter(simulation_id = simulation_id , id = market_id).first()
             if market_obj is None:
-                raise (f"Unable to find Market with id : {market_id}")
+                raise ValueError (f"Unable to find Market with id : {market_id}")
 
             filename = uploaded_file.name
             if uploaded_file.name.endswith('.csv'):
@@ -86,6 +93,7 @@ def process_student_score_file(request):
             row_count = len(df)
             all_students = Student.objects.all()
             no_student_found_list = []
+            no_team_found_list = []
             duplicate_student_found_list = []
             student_with_other_market_found_list = []
             score_obj_add_list = []
@@ -101,6 +109,18 @@ def process_student_score_file(request):
                 if temp_student is None:
                     no_student_found_list.append(player_id)
                     continue
+                temp_team = None
+                temp_team_member = None
+                if is_team == "1":
+                    temp_team_member = TeamMember.objects.filter(team__simulation_id = simulation_id, student_id = temp_student.id).first()
+                    if temp_team_member is None:
+                        no_team_found_list.append(player_id)
+                        continue
+                    temp_team = Team.objects.get(pk = temp_team_member.team_id)
+                    if temp_team is None:
+                        no_team_found_list.append(player_id)
+                        continue
+                    
                 already_exists = False
                 if len(score_obj_add_list) > 0:
                     already_exists = any(obj.go_venture_subscription_key == subscription_key_parsed for obj in score_obj_add_list)
@@ -111,7 +131,7 @@ def process_student_score_file(request):
                     duplicate_student_found_list.append(player_id)
                     continue
 
-                temp_score = StudentScore.objects.filter(student_id = temp_student.id).first()
+                temp_score = StudentScore.objects.filter(student_id = temp_student.id, market_id = market_obj.id).first()
                 if temp_score is not None and temp_score.market.id != market_obj.id:
                     student_with_other_market_found_list.append(player_id)
                     continue
@@ -165,6 +185,8 @@ def process_student_score_file(request):
                         creation_date_time = now,
                         created_by = user
                     )
+                temp_score.team = temp_team
+                temp_score.team_member = temp_team_member
                 temp_score.player_id = player_id_parsed
                 temp_score.company = company
                 temp_score.first_name = first_name
@@ -221,6 +243,9 @@ def process_student_score_file(request):
             if len(no_student_found_list) > 0:
                 additional_info += f", no student found {len(no_student_found_list)} [{', '.join(map(str,no_student_found_list))}]"
                 failed_count += len(no_student_found_list)
+            if len(no_team_found_list) > 0:
+                additional_info += f", no team found {len(no_team_found_list)} [{', '.join(map(str,no_team_found_list))}]"
+                failed_count += len(no_team_found_list)
             if len(duplicate_student_found_list) > 0:
                 additional_info += f", duplicate student found {len(duplicate_student_found_list)} [{', '.join(map(str,duplicate_student_found_list))}]"
                 failed_count += len(duplicate_student_found_list)

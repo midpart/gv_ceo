@@ -56,7 +56,7 @@ class Market(models.Model):
 class Team(models.Model):
     simulation = models.ForeignKey(Simulation, on_delete=models.RESTRICT, related_name='team_simulation', null=True)
     name = models.CharField(max_length=255)
-    team_id = models.IntegerField(null=False, default=0)
+    teamID = models.IntegerField(null=False, default=0)
     sim_team_id = models.CharField(max_length=255, null=True)
     is_mmf = models.BooleanField(default=False)
     is_3pt = models.BooleanField(default=False)
@@ -68,12 +68,13 @@ class Team(models.Model):
     modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='team_modified')
 
     def __str__(self):
-        return self.name
+        return f"{self.teamID}"
 
 class TeamMember(models.Model):
     team = models.ForeignKey(Team, on_delete=models.RESTRICT, related_name='team_team_member', null=False)
     student = models.ForeignKey(Student, on_delete=models.RESTRICT, related_name='student_team_member', null=False)
     role = models.CharField(max_length=255)
+    teammember_order = models.IntegerField(null=False, default=0)
 
     creation_date_time = models.DateTimeField(auto_now_add=True)
     modification_date_time = models.DateTimeField(default=timezone.now)
@@ -84,14 +85,15 @@ class TeamMember(models.Model):
         return f"Student: {self.student.name}, Team: {self.team.name}"
     
 class StudentScore(models.Model):
-    student = models.OneToOneField(Student, on_delete=models.RESTRICT, related_name='student_scores', null=True, unique= True)
-    team = models.OneToOneField(Team, on_delete=models.RESTRICT, related_name='team_scores', null=True, unique= True)
-    market = models.ForeignKey(Market, on_delete=models.RESTRICT, related_name='market_scores', null=False, unique= False)
+    student = models.OneToOneField(Student, on_delete=models.RESTRICT, related_name='student_scores', null=False)
+    team = models.OneToOneField(Team, on_delete=models.RESTRICT, related_name='team_scores', null=True)
+    team_member = models.OneToOneField(TeamMember, on_delete=models.RESTRICT, related_name='team_member_scores', null=True)
+    market = models.ForeignKey(Market, on_delete=models.RESTRICT, related_name='market_scores', null=False)
     player_id = models.BigIntegerField(null= False)
     company = models.CharField(max_length=255)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
-    go_venture_subscription_key = models.CharField(max_length=255, null=False, unique=True)
+    go_venture_subscription_key = models.CharField(max_length=255, null=False, unique=False)
     simulation_number = models.CharField(max_length=255)
     rubric_score_percentage = models.IntegerField(default=0)
     balanced_score_percentage = models.IntegerField(default=0)
@@ -135,6 +137,7 @@ class StudentScore(models.Model):
                 check= Q(student__isnull=False) | Q(team__isnull=False),
                 name='student_or_team_required'
             ),
+             models.UniqueConstraint(fields=['student', 'market'], name='unique_student_market')
         ]
 
 

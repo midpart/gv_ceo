@@ -26,6 +26,14 @@
                                 </select>
                             </div>
                             <div class="mb-3">
+                                <label for="is_team" class="form-label">Is Team Score</label>
+                                <select name="is_team" id="is_team" class="form-select" required>
+                                    <option value="">-- Select is team score--</option>
+                                    <option value="0">No</option>
+                                    <option value="1">Yes</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
                                 <label for="file" class="form-label">Upload CSV/Excel File</label>
                                 <input type="file" name="file" id="file" class="form-control" required>
                             </div>
@@ -108,6 +116,11 @@
             $('#uploadScore').attr('disabled', true);
             const selectedMarket = $("#selectMarket").val();
             const selectedSimulation = $("#simulation_id").val();
+            const is_team = $("#is_team").val();
+            if (!is_team) {
+                $("#message").html(`<div class='alert alert-danger'>Please select is team option.</div>`);
+                return;
+            }
             if (!uploadedFile) {
                 $("#message").html(`<div class='alert alert-danger'>Please upload a file first.</div>`);
                 return;
@@ -127,6 +140,7 @@
             formData.append("file", uploadedFile);
             formData.append("market_id", selectedMarket);
             formData.append("simulation_id", selectedSimulation);
+            formData.append("is_team", is_team);
             $.ajax({
                 url: "{% url 'processStudentScoreFile' %}",
                 type: "POST",

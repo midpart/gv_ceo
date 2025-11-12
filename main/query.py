@@ -1,5 +1,11 @@
 from django.db import connection
 
+def str_to_bigint(value):
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return None
+
 def get_param_value(params_filter, key):
     if key in params_filter:
         value = params_filter[key]
@@ -117,6 +123,86 @@ LEFT JOIN main_student stu ON stu.id = sc.student_id
         where_sql += " \n ".join(filter_query)
     sql += where_sql
     sql += " \n ORDER BY rubric_score_percentage DESC"
+    # execute safely
+    with connection.cursor() as cursor:
+        #print(cursor.mogrify(sql, params))
+        print(get_sql_debug(sql, params))  # for debugging only
+        cursor.execute(sql, params)
+        #rows = cursor.fetchall()
+        rows = dictfetchall(cursor)
+
+    return rows
+
+def get_team_member_report(params_filter):
+
+    sql = """
+SELECT 
+	tm.id as team_id
+	, tm.student_id 
+	, t.simulation_id 
+	, t.teamID 
+	, t.sim_team_id 
+	, tm.role
+	, tm.teammember_order 
+	, t.name as team_name
+	, t.is_3pt 
+	, t.is_fix_alloc 
+	, t.is_mmf 
+	, stu.name as student_name
+	, stu.gender 
+	, stu.age_in_year as age
+    , stu.campus
+	, s.name as simulation_name
+FROM main_teammember tm 
+INNER JOIN main_team t ON t.id = tm.team_id 
+INNER JOIN main_student stu ON stu.id = tm.student_id 
+INNER JOIN main_simulation s ON s.id = t.simulation_id 
+"""
+    params = []
+    filter_query = []
+
+    simulation_ids = get_param_value(params_filter, "simulation_ids")
+    student_name = get_param_value(params_filter, "student_name")
+    teamID = get_param_value(params_filter, "teamID")
+    is_3pt = get_param_value(params_filter, "is_3pt")
+    is_fix_alloc = get_param_value(params_filter, "is_fix_alloc")
+    is_mmf = get_param_value(params_filter, "is_mmf")
+    campus = get_param_value(params_filter, "campus")
+
+    if simulation_ids is not None and len(simulation_ids) > 0:
+        selected_simulation_ids = [int(c) for c in simulation_ids if c.isdigit()]
+        id_list = ', '.join(str(c) for c in selected_simulation_ids)
+        filter_query.append(f"AND t.simulation_id IN ({id_list})")
+
+    if student_name is not None and student_name:
+        filter_query.append("AND stu.name LIKE %s")
+        params.append(f"%{student_name}%")
+
+    if teamID is not None and teamID and str_to_bigint(teamID) > 0:
+        filter_query.append("AND t.teamID = %s")
+        params.append(f"{str_to_bigint(teamID)}")
+
+    if is_3pt is not None and is_3pt and str_to_bigint(is_3pt) > -1:
+        filter_query.append("AND t.is_3pt = %s")
+        params.append(f"{is_3pt}")
+
+    if is_fix_alloc is not None and is_fix_alloc and str_to_bigint(is_fix_alloc) > -1:
+        filter_query.append("AND t.is_fix_alloc = %s")
+        params.append(f"{is_fix_alloc}")
+
+    if is_mmf is not None and is_mmf and str_to_bigint(is_mmf) > -1:
+        filter_query.append("AND t.is_mmf = %s")
+        params.append(f"{is_mmf}")
+    
+    if campus is not None and campus:
+        filter_query.append("AND stu.campus = %s")
+        params.append(f"{campus}")
+
+    where_sql = "WHERE 1 = 1 "
+    if len(filter_query) > 0:
+        where_sql += " \n ".join(filter_query)
+    sql += where_sql
+    sql += " \n ORDER BY t.teamID ASC, tm.teammember_order ASC"
     # execute safely
     with connection.cursor() as cursor:
         #print(cursor.mogrify(sql, params))
