@@ -53,16 +53,25 @@ SELECT
 	, sc.competency_quiz_percentage 
 	, sc.team_evaluation_percentage 
 	, sc.period_joined 
-	, sc.tutorial_quiz_percentage 
+	, sc.tutorial_quiz_percentage
+	, t.teamID 
+	, t.is_3pt 
+	, t.is_fix_alloc 
+	, t.is_mmf 
+	, tm.role 
 FROM main_studentscore sc 
 INNER JOIN main_market m ON m.id = sc.market_id 
-LEFT JOIN main_student stu ON stu.id = sc.student_id 
+INNER JOIN main_student stu ON stu.id = sc.student_id 
+LEFT JOIN main_team t ON t.id = sc.team_id 
+LEFT JOIN main_teammember tm ON tm.id = sc.team_member_id 
 """
     params = []
     filter_query = []
 
     market_id = get_param_value(params_filter, "market_id")
     simulation_id = get_param_value(params_filter, "simulation_id")
+    simulation_ids = get_param_value(params_filter, "simulation_ids")
+    market_ids = get_param_value(params_filter, "market_ids")
     student_id = get_param_value(params_filter, "student_id")
     team_id = get_param_value(params_filter, "team_id")
     report_type = get_param_value(params_filter, "report_type")
@@ -76,9 +85,21 @@ LEFT JOIN main_student stu ON stu.id = sc.student_id
         filter_query.append("AND sc.market_id = %s")
         params.append(market_id)
 
+    if market_ids is not None and len(market_ids) > 0:
+        selected_market_ids = [int(c) for c in market_ids if c.isdigit()]
+        if len(selected_market_ids) > 0:
+            id_list = ', '.join(str(c) for c in selected_market_ids)
+            filter_query.append(f"AND sc.market_id IN ({id_list})")
+
     if simulation_id is not None and simulation_id.isdigit():
         filter_query.append("AND m.simulation_id = %s")
         params.append(simulation_id)
+
+    if simulation_ids is not None and len(simulation_ids) > 0:
+        selected_simulation_ids = [int(c) for c in simulation_ids if c.isdigit()]
+        if len(selected_simulation_ids) > 0:
+            id_list = ', '.join(str(c) for c in selected_simulation_ids)
+            filter_query.append(f"AND m.simulation_id IN ({id_list})")
 
     if student_id is not None and student_id.isdigit():
         filter_query.append("AND sc.student_id = %s")
@@ -88,33 +109,28 @@ LEFT JOIN main_student stu ON stu.id = sc.student_id
         filter_query.append("AND sc.team_id = %s")
         params.append(team_id)
 
-    apply_student_filter = True
-    if report_type is not None:
-        if report_type  == 1: # only student
-            filter_query.append("AND sc.student_id IS NOT NULL")
-        elif report_type  == 2: # only Team
-            apply_student_filter = False
-            filter_query.append("AND sc.team_id IS NOT NULL")
+    if report_type is not None and report_type  == '2':
+        filter_query.append("AND sc.team_id IS NOT NULL")
 
-    if student_name is not None and apply_student_filter and student_name:
+    if student_name is not None and student_name:
         filter_query.append("AND stu.name LIKE %s")
         params.append(f"%{student_name}%")
 
-    if age_from is not None and apply_student_filter and age_from.isdigit():
+    if age_from is not None and age_from.isdigit():
         filter_query.append("AND stu.age_in_year >= %s")
         params.append(age_from)
 
-    if age_to is not None and apply_student_filter and age_to.isdigit():
+    if age_to is not None and age_to.isdigit():
         filter_query.append("AND stu.age_in_year <= %s")
         params.append(age_to)
 
-    if gender is not None and apply_student_filter and gender:
+    if gender is not None and gender:
         if gender.lower() == 'female':
             filter_query.append("AND stu.gender = 'Female'")
         elif gender.lower() == 'male':
             filter_query.append("AND stu.gender = 'Male'")
 
-    if campus is not None and apply_student_filter and campus:
+    if campus is not None and campus:
         filter_query.append("AND stu.campus = %s")
         params.append(f"{campus}")
     

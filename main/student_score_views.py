@@ -277,14 +277,14 @@ def student_score_report(request):
     market_list = None
     try:
         per_page = request.GET.get("per_page", settings.PER_PAGE)
-        simulation_id = request.GET.get("simulation_id", None)
-        market_id = request.GET.get("market_id", None)
+        simulation_ids = [int(i) for i in request.GET.getlist("simulation_ids", []) if i.isdigit()]
+        market_ids = [int(i) for i in request.GET.getlist("market_ids", []) if i.isdigit()]
         filters = get_filter(request)
         simulation_list = Simulation.objects.all()
         campus_list = get_all_campus()
-        if simulation_id:
-            market_list = Market.objects.filter(simulation_id = simulation_id).all()
-        elif market_id:
+        if simulation_ids and len(simulation_ids) > 0:
+            market_list = Market.objects.filter(simulation_id__in=simulation_ids).all()
+        elif market_ids:
             market_list = Market.objects.all()
 
         rows = get_student_score_report(filters)
@@ -305,9 +305,10 @@ def get_markets_list(request):
     market_obj = []
     if request.method == "POST":
         try:
-            simulation_id = request.POST.get('simulation_id')
-            if simulation_id:
-                market_obj = Market.objects.filter(simulation_id = simulation_id).all()
+            print(request.POST.getlist("simulation_ids", []))
+            simulation_ids = [int(i) for i in request.POST.getlist("simulation_ids", []) if i.isdigit()]
+            if len(simulation_ids) > 0:
+                market_obj = Market.objects.filter(simulation_id__in = simulation_ids).all()
             else:
                 market_obj = Market.objects.all()
             market_obj = list(market_obj.values("id", "name"))
@@ -322,13 +323,18 @@ def get_filter(request):
             "student_name": request.GET.get("student_name", "").strip(),
             "gender": request.GET.get("gender", ""), 
             "campus": request.GET.get("campus", ""), 
+            "simulation_ids":  request.GET.getlist("simulation_ids", None),
             "simulation_id": request.GET.get("simulation_id", None),
             "market_id": request.GET.get("market_id", None),
+            "market_ids": request.GET.getlist("market_ids", None),
             "age_from": request.GET.get("age_from", None),
             "age_to": request.GET.get("age_to", None),
             "per_page": request.GET.get("per_page", settings.PER_PAGE),
         }
     return filters
+
+def get_true_false(value):
+    return 1 if value == True else 0
 
 @login_required(login_url='login')
 def student_score_report_xlx(request):
@@ -343,7 +349,7 @@ def student_score_report_xlx(request):
     ws.title = f"Students_score_report"
     file_name = f"Students_score_report_{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
     # Add header
-    ws.append(["ID", "Studienr", "Name", "Age", "Gender", "EmailAddress", "Campus", "SubscriptionKey", "Player Id", "Company"
+    ws.append(["ID", "Studienr", "TeamID", "is_3pt", "is_mmf", "is_fix_alloc", "role", "Name", "Age", "Gender", "EmailAddress", "Campus", "SubscriptionKey", "Player Id", "Company"
                , "GoVenture Subscription Key | Simulation Number", "Rubric Score", "Balanced Score", "Participation Score"
                , "Participation Score Info", "Rank Score", "HR Score", "Ethics Score", "Competency Quiz", "Team Evaluation"
                , "Period joined", "Tutorial Quiz"])
@@ -351,7 +357,8 @@ def student_score_report_xlx(request):
     # Add data
     for row in rows:
         #ws.append(row)
-        ws.append([row["id"], row["studienr"], row["name"], row["age"], row["gender"], row["email_address"], row["campus"], row["subscription_key"], row["player_id"], 
+        ws.append([row["id"], row["studienr"], row["teamID"], get_true_false(row["is_3pt"]), get_true_false(row["is_mmf"]), get_true_false(row["is_fix_alloc"])
+                   , row["role"], row["name"], row["age"], row["gender"], row["email_address"], row["campus"], row["subscription_key"], row["player_id"], 
                    row["company"], f"{row["go_venture_subscription_key"]} | #{row["go_venture_simulation_number"]}", row["rubric_score_percentage"], 
                    row["balanced_score_percentage"], row["participation_percentage"], f"({row["participation_in"]} of {row["participation_total"]})"
                    , row["rank_score_percentage"], row["hr_score_percentage"], row["ethics_score_percentage"], row["competency_quiz_percentage"], 

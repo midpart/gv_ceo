@@ -27,28 +27,29 @@
                     <div class="col-md-2">
                         <label for="report_type" class="form-label">Report Type</label>
                         <select class="form-select" name="report_type" id="report_type">
+                            <option value="0" {% if filters.report_type == "0" %}selected{% endif %}>All</option>
                             <option value="1" {% if filters.report_type == "1" %}selected{% endif %}>Student</option>
                             <option value="2" {% if filters.report_type == "2" %}selected{% endif %}>Team</option>
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label for="simulation_id" class="form-label">Simulation</label>
-                        <select class="form-select" name="simulation_id" id="simulation_id">
+                        <label for="simulation_ids" class="form-label">Simulation</label>
+                        <select class="form-select" name="simulation_ids" id="simulation_ids">
                             <option value="">All</option>
                             {% if simulation_list %}
                                 {% for simulation in simulation_list %}
-                                    <option value="{{simulation.id}}" {% if filters.simulation_id|stringformat:"s" == simulation.id|stringformat:"s" %}selected{% endif %}>{{simulation.name}}</option>
+                                    <option value="{{simulation.id}}" {% if simulation.id|stringformat:"s" in filters.simulation_ids %}selected{% endif %}>{{simulation.name}}</option>
                                 {% endfor %}
                             {% endif %}
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <label for="market_id" class="form-label">Market</label>
-                        <select class="form-select" name="market_id" id="market_id">
+                        <label for="market_ids" class="form-label">Market</label>
+                        <select class="form-select" name="market_ids" id="market_ids">
                             <option value="">All</option>
                             {% if market_list %}
                                 {% for market in market_list %}
-                                    <option value="{{market.id}}" {% if filters.market_id|stringformat:"s" == market.id|stringformat:"s" %}selected{% endif %}>{{market.name}}</option>
+                                    <option value="{{market.id}}" {% if market.id|stringformat:"s" in filters.market_ids %}selected{% endif %}>{{market.name}}</option>
                                 {% endfor %}
                             {% endif %}
                         </select>
@@ -107,6 +108,11 @@
                 <tr>
                     <th>Sl</th>
                     <th>Market</th>
+                    <th>TeamID</th>
+                    <th>3PT?</th>
+                    <th>MMF</th>
+                    <th>Fix Alloc?</th>
+                    <th>Role</th>
                     <th>StudentName</th>
                     <th>Age</th>
                     <th>Gender</th>
@@ -130,6 +136,11 @@
                 <tr id="item-row-{{ obj.id }}">
                     <td>{{ forloop.counter0|add:page_obj.start_index|add:-0 }}</td>
                     <td title="{{ obj.market_name }}">{{ obj.market_name|slice:":10" }}{% if obj.market_name|length > 6 %}…{% endif %}</td>
+                    <td>{{ obj.teamID }}</td>
+                    <td>{{ obj.is_3pt }}</td>
+                    <td>{{ obj.is_mmf }}</td>
+                    <td>{{ obj.is_fix_alloc }}</td>
+                    <td>{{ obj.role }}</td>
                     <td>{{ obj.name }}</td>
                     <td>{{ obj.age }}</td>
                     <td>{{ obj.gender }}</td>
@@ -193,8 +204,20 @@
 
 
 {% block script %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(document).ready(function () {
+
+         $('#simulation_ids').select2({
+            placeholder: "Select Simulations",
+            allowClear: true
+        });
+
+        $('#market_ids').select2({
+            placeholder: "Select Markets",
+            allowClear: true
+        });
 
         var $filterPanel = $('#filterPanel');
         var $toggleBtn = $('#filterToggleBtn');
@@ -215,10 +238,11 @@
             $toggleBtn.text('Show Filters');
         }
 
-         $('#simulation_id').change(function () {
-            var simulation_id = $(this).val();
+         $('#simulation_ids').change(function () {
+            var simulation_ids = $(this).val();
+            console.log(simulation_ids);
             const formData = new FormData();
-            formData.append("simulation_id", simulation_id);
+            formData.append("simulation_ids", simulation_ids);
             $.ajax({
                 url: "{% url 'getMarketsList' %}",
                 type: "POST",
@@ -230,9 +254,9 @@
                 },
                 success: function (response) {
                     if (response.success) {
-                        $("#market_id").empty().append('<option value="">All market</option>');
+                        $("#market_ids").empty().append('<option value="">All market</option>');
                         response.markets.forEach(obj => {
-                            $("#market_id").append(`<option value="${obj.id}">${obj.name}</option>`);
+                            $("#market_ids").append(`<option value="${obj.id}">${obj.name}</option>`);
                         });
                     } else {
                         $("#message").html(`<div class='alert alert-danger'>${response.error.replace(/\n/g, "<br>")}</div>`);

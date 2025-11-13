@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from . import views, student_views, student_score_views, market_views, team_views
+from . import views, student_views, student_score_views, market_views, team_views, simulation2_survey_views
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -27,4 +27,9 @@ urlpatterns = [
     path('upload_team_file/', team_views.upload_team_file, name='uploadTeamFile'),
     path('process_team_file_sheet/', team_views.process_team_file_sheet, name='processTeamFileSheet'),
     path('team_member_report/', team_views.team_member_report, name='teamMemberReport'),
+
+    path('upload_simulation2_survey_file/', simulation2_survey_views.upload_simulation2_survey_file, name='uploadSimulation2SurveyFile'),
+    path('process_simulation2_survey_file_sheet/', simulation2_survey_views.process_simulation2_survey_file_sheet, name='processSimulation2SurveyFileSheet'),
+    path('simulation2_survey_report/', simulation2_survey_views.simulation2_survey_report, name='simulation2SurveyReport'),
+
 ]

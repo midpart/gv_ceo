@@ -105,3 +105,20 @@ class TeamMemberAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False    
+    
+@admin.register(Simulation2Survey)
+class Simulation2SurveyAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.created_by = request.user
+        obj.modified_by = request.user
+        obj.modification_date_time = timezone.now()
+        return super().save_model(request, obj, form, change)
+    
+    list_display = ('id', 'student', 'simulation', 'indiv_time_spent', 'joint_time_spent'
+                    , 'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
+    list_per_page = settings.PER_PAGE
+    list_filter = ('simulation',)
+
+    def has_add_permission(self, request):
+        return False   
