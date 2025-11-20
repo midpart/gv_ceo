@@ -372,3 +372,61 @@ def student_score_report_xlx(request):
 
     wb.save(response)
     return response
+
+
+@login_required(login_url='login')
+def student_score_report_with_survey_xlx(request):
+    # Get your filtered data
+    rows = []
+    filters = get_filter(request)
+    rows = get_student_score_report(filters, True)
+
+    # Create workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f"Score_report_with_survey"
+    file_name = f"Score_report_with_survey_{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
+    # Add header
+    ws.append(["ID", "Studienr", "TeamID", "is_3pt", "is_mmf", "is_fix_alloc", "role", "Name", "Age", "Gender", "EmailAddress", "Campus", "SubscriptionKey", "Player Id", "Company"
+               , "GoVenture Subscription Key | Simulation Number", "Rubric Score", "Balanced Score", "Participation Score"
+               , "Participation Score Info", "Rank Score", "HR Score", "Ethics Score", "Competency Quiz", "Team Evaluation"
+               , "Period joined", "Tutorial Quiz", "indiv_time_spent", "indiv_time_spent_t", "joint_time_spent", "joint_time_spent_t", "days_in_person", "days_in_person_t", "responsib_clear", "responsib_clear_t"
+               , "responsib_own", "responsib_own_t", "responsib_change", "responsib_change_t", "areas_change_1", "areas_change_2", "areas_change_3"
+               , "areas_change_4", "areas_change_indiv"
+               , "areas_change_team", "responsib_outside", "responsib_outside_t", "ta_a", "ta_b", "ta_c", "ta_indiv", "ta_team", "la_a", "la_b", "la_c", "la_indiv", "la_team"
+               , "tms_s1", "tms_s2", "tms_s3", "tms_s4", "tms_s5", "tms_spec_indiv", "tms_spec_team", "tms_cred1", "tms_cred2", "tms_cred3", "tms_cred4", "tms_cred5", "tms_cred_indiv"
+               , "tms_cred_team", "tms_co1", "tms_co2", "tms_co3", "tms_co4", "tms_co5", "tms_coord_indiv", "tms_coord_team", "att_market_sales", "att_production", "att_randd"
+               , "focus_shift_1", "focus_shift_2", "focus_shift_3", "focus_shift_4", "focus_shift_indiv", "focus_shift_team", "compet_import1", "compet_import2", "compet_import3"
+               , "compet_import_indiv", "pcs_1", "pcs_2", "pcs_3", "pcs_indiv", "pcs_team", "statoverall_1", "statoverall_2", "statoverall_3", "statoverall_4", "statoverall_5"
+               , "statoverall_indiv", "statoverall_team", "team_size", "team_size_found", "comments", "subscrip_key", "mail_confirm", "email", "match_value", "match_by_field", "row_number"])
+
+    # Add data
+    for row in rows:
+        #ws.append(row)
+        ws.append([row["id"], row["studienr"], row["teamID"], get_true_false(row["is_3pt"]), get_true_false(row["is_mmf"]), get_true_false(row["is_fix_alloc"])
+                   , row["role"], row["name"], row["age"], row["gender"], row["email_address"], row["campus"], row["subscription_key"], row["player_id"], 
+                   row["company"], f"{row["go_venture_subscription_key"]} | #{row["go_venture_simulation_number"]}", row["rubric_score_percentage"], 
+                   row["balanced_score_percentage"], row["participation_percentage"], f"({row["participation_in"]} of {row["participation_total"]})"
+                   , row["rank_score_percentage"], row["hr_score_percentage"], row["ethics_score_percentage"], row["competency_quiz_percentage"], 
+                   row["team_evaluation_percentage"], row["period_joined"], row["tutorial_quiz_percentage"]
+                   , row["indiv_time_spent"], row["indiv_time_spent_t"], row["joint_time_spent"], row["joint_time_spent_t"], row["days_in_person"], row["days_in_person_t"], row["responsib_clear"], row["responsib_clear_t"]
+                   , row["responsib_own"], row["responsib_own_t"], row["responsib_change"], row["responsib_change_t"], row["areas_change_1"], row["areas_change_2"], row["areas_change_3"]
+               , row["areas_change_4"], row["areas_change_indiv"], row["areas_change_team"], row["responsib_outside"], row["responsib_outside_t"]
+               , row["ta_a"], row["ta_b"], row["ta_c"], row["ta_indiv"], row["ta_team"], row["la_a"], row["la_b"], row["la_c"], row["la_indiv"], row["la_team"]
+               , row["tms_s1"], row["tms_s2"], row["tms_s3"], row["tms_s4"], row["tms_s5"], row["tms_spec_indiv"], row["tms_spec_team"], row["tms_cred1"], row["tms_cred2"]
+               , row["tms_cred3"], row["tms_cred4"], row["tms_cred5"], row["tms_cred_indiv"], row["tms_cred_team"], row["tms_co1"], row["tms_co2"]
+               , row["tms_co3"], row["tms_co4"], row["tms_co5"], row["tms_coord_indiv"], row["tms_coord_team"], row["att_market_sales"], row["att_production"], row["att_randd"]
+               , row["focus_shift_1"], row["focus_shift_2"], row["focus_shift_3"], row["focus_shift_4"], row["focus_shift_indiv"], row["focus_shift_team"], row["compet_import1"]
+               , row["compet_import2"], row["compet_import3"], row["compet_import_indiv"], row["pcs_1"], row["pcs_2"], row["pcs_3"], row["pcs_indiv"], row["pcs_team"]
+               , row["statoverall_1"], row["statoverall_2"], row["statoverall_3"], row["statoverall_4"], row["statoverall_5"], row["statoverall_indiv"], row["statoverall_team"]
+               , row["team_size"], row["team_size_found"], row["comments"], row["subscrip_key"], row["mail_confirm"], row["email"], row["match_value"], row["match_by_field"]
+               , row["row_number"]])
+
+    # Prepare response
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="{file_name}.xlsx"'
+
+    wb.save(response)
+    return response

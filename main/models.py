@@ -85,9 +85,9 @@ class TeamMember(models.Model):
         return f"Student: {self.student.name}, Team: {self.team.name}"
     
 class StudentScore(models.Model):
-    student = models.OneToOneField(Student, on_delete=models.RESTRICT, related_name='student_scores', null=False)
-    team = models.OneToOneField(Team, on_delete=models.RESTRICT, related_name='team_scores', null=True)
-    team_member = models.OneToOneField(TeamMember, on_delete=models.RESTRICT, related_name='team_member_scores', null=True)
+    student = models.ForeignKey(Student, on_delete=models.RESTRICT, related_name='student_scores', null=False)
+    team = models.ForeignKey(Team, on_delete=models.RESTRICT, related_name='team_scores', null=True)
+    team_member = models.ForeignKey(TeamMember, on_delete=models.RESTRICT, related_name='team_member_scores', null=True)
     market = models.ForeignKey(Market, on_delete=models.RESTRICT, related_name='market_scores', null=False)
     player_id = models.BigIntegerField(null= False)
     company = models.CharField(max_length=255)
@@ -159,69 +159,116 @@ class ImportFileLog(models.Model):
         return self.name 
     
 class Simulation2Survey(models.Model):
-    student = models.OneToOneField(Student, on_delete=models.RESTRICT, related_name='student_simulation2_survey', null=False)
+    student = models.ForeignKey(Student, on_delete=models.RESTRICT, related_name='student_simulation2_survey', null=False)
     simulation = models.ForeignKey(Simulation, on_delete=models.RESTRICT, related_name='simulation_simulation2_survey', null=False)
+    team = models.ForeignKey(Team, on_delete=models.RESTRICT, related_name='team_simulation2_survey', null=False)
+    team_member = models.ForeignKey(TeamMember, on_delete=models.RESTRICT, related_name='team_member_simulation2_survey', null=False)
+
     indiv_time_spent = models.IntegerField(default=0)
+    indiv_time_spent_t = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     joint_time_spent = models.IntegerField(default=0)
+    joint_time_spent_t = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     days_in_person = models.IntegerField(default=0)
+    days_in_person_t = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     responsib_clear = models.IntegerField(default=0)
+    responsib_clear_t = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     responsib_own = models.IntegerField(default=0)
+    responsib_own_t = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     responsib_change = models.IntegerField(default=0)
+    responsib_change_t = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     areas_change_1 = models.IntegerField(default=0)
     areas_change_2 = models.IntegerField(default=0)
     areas_change_3 = models.IntegerField(default=0)
     areas_change_4 = models.IntegerField(default=0)
-    areas_change_avg = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    areas_change_indiv = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    areas_change_team = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     responsib_outside = models.IntegerField(default=0)
+    responsib_outside_t = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     ta_a = models.IntegerField(default=0)
     ta_b = models.IntegerField(default=0)
     ta_c = models.IntegerField(default=0)
+    ta_indiv = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    ta_team = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     la_a = models.IntegerField(default=0)
     la_b = models.IntegerField(default=0)
     la_c = models.IntegerField(default=0)
+    la_indiv = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    la_team = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     tms_s1 = models.IntegerField(default=0)
     tms_s2 = models.IntegerField(default=0)
     tms_s3 = models.IntegerField(default=0)
     tms_s4 = models.IntegerField(default=0)
     tms_s5 = models.IntegerField(default=0)
-    tms_avg = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    tms_spec_indiv = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    tms_spec_team = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     tms_cred1 = models.IntegerField(default=0)
     tms_cred2 = models.IntegerField(default=0)
     tms_cred3 = models.IntegerField(default=0)
     tms_cred4 = models.IntegerField(default=0)
     tms_cred5 = models.IntegerField(default=0)
-    tms_avg = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    tms_cred_indiv = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    tms_cred_team = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     tms_co1 = models.IntegerField(default=0)
     tms_co2 = models.IntegerField(default=0)
     tms_co3 = models.IntegerField(default=0)
     tms_co4 = models.IntegerField(default=0)
     tms_co5 = models.IntegerField(default=0)
-    tms_avg = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    tms_coord_indiv = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    tms_coord_team = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     att_market_sales = models.IntegerField(default=0)
     att_production = models.IntegerField(default=0)
     att_randd = models.IntegerField(default=0)
+
     focus_shift_1 = models.IntegerField(default=0)
     focus_shift_2 = models.IntegerField(default=0)
     focus_shift_3 = models.IntegerField(default=0)
     focus_shift_4 = models.IntegerField(default=0)
-    focus_shift_avg = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    focus_shift_indiv = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    focus_shift_team = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     compet_import1 = models.IntegerField(default=0)
     compet_import2 = models.IntegerField(default=0)
     compet_import3 = models.IntegerField(default=0)
-    compet_import_avg = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    compet_import_indiv = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    compet_import_team = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
     pcs_1 = models.IntegerField(default=0)
     pcs_2 = models.IntegerField(default=0)
     pcs_3 = models.IntegerField(default=0)
-    pcs_avg = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
-    comments = models.CharField(max_length=1000)
-    mail_confirm = models.CharField(max_length=255)
-    email = models.CharField(max_length=255)
+    pcs_indiv = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    pcs_team = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    
     statoverall_1 = models.IntegerField(default=0)
     statoverall_2 = models.IntegerField(default=0)
     statoverall_3 = models.IntegerField(default=0)
     statoverall_4 = models.IntegerField(default=0)
     statoverall_5 = models.IntegerField(default=0)
-    statoverall_avg = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    statoverall_indiv = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+    statoverall_team = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
+
+    team_size = models.IntegerField(default=0)
+    team_size_found = models.IntegerField(default=0)
+
+    comments = models.CharField(max_length=1000)
+    subscrip_key = models.CharField(max_length=255)
+    mail_confirm = models.CharField(max_length=255)
+    email = models.CharField(max_length=255)
+    match_value = models.CharField(max_length=255)
+    match_by_field = models.CharField(max_length=255)
+    row_number = models.IntegerField(default=0)
 
     creation_date_time = models.DateTimeField(auto_now_add=True)
     modification_date_time = models.DateTimeField(default=timezone.now)

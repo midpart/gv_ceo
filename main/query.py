@@ -20,7 +20,7 @@ def dictfetchall(cursor):
         for row in cursor.fetchall()
     ]
 
-def get_student_score_report(params_filter):
+def get_student_score_report(params_filter, with_survey = False):
 
     sql = """
 SELECT 
@@ -59,11 +59,100 @@ SELECT
 	, t.is_fix_alloc 
 	, t.is_mmf 
 	, tm.role 
+
+	, CASE WHEN sy.id is null THEN 0 ELSE sy.team_size_found END AS survey_taken
+	, sy.indiv_time_spent 
+	, sy.indiv_time_spent_t 
+	, sy.joint_time_spent 
+	, sy.joint_time_spent_t 
+	, sy.responsib_clear  
+	, sy.responsib_clear_t
+	, sy.responsib_own 
+	, sy.responsib_own_t 
+	, sy.days_in_person 
+	, sy.days_in_person_t 
+	, sy.responsib_change 
+	, sy.responsib_change_t 
+	, sy.areas_change_1  
+	, sy.areas_change_2  
+	, sy.areas_change_3  
+	, sy.areas_change_4  
+	, sy.areas_change_indiv
+	, sy.areas_change_team 
+	, sy.responsib_outside 
+	, sy.responsib_outside_t 
+	, sy.ta_a 
+	, sy.ta_b 
+	, sy.ta_c 
+	, sy.ta_indiv 
+	, sy.ta_team 
+	, sy.la_a 
+	, sy.la_b 
+	, sy.la_c 
+	, sy.la_indiv
+	, sy.la_team
+	, sy.tms_s1
+	, sy.tms_s2
+	, sy.tms_s3
+	, sy.tms_s4
+	, sy.tms_s5
+	, sy.tms_spec_indiv
+	, sy.tms_spec_team
+	, sy.tms_cred1 
+	, sy.tms_cred2 
+	, sy.tms_cred3 
+	, sy.tms_cred4 
+	, sy.tms_cred5 
+	, sy.tms_cred_indiv 
+	, sy.tms_cred_team 
+	, sy.tms_co1 
+	, sy.tms_co2 
+	, sy.tms_co3 
+	, sy.tms_co4 
+	, sy.tms_co5 
+	, sy.tms_coord_indiv
+	, sy.tms_coord_team 
+	, sy.att_market_sales 
+	, sy.att_production 
+	, sy.att_randd 
+	, sy.focus_shift_1 
+	, sy.focus_shift_2 
+	, sy.focus_shift_3 
+	, sy.focus_shift_4 
+	, sy.focus_shift_indiv 
+	, sy.focus_shift_team 
+	, sy.compet_import1 
+	, sy.compet_import2 
+	, sy.compet_import3 
+	, sy.compet_import_indiv
+	, sy.compet_import_team 
+	, sy.pcs_1 
+	, sy.pcs_2 
+	, sy.pcs_3 
+	, sy.pcs_indiv 
+	, sy.pcs_team 
+	, sy.statoverall_1 
+	, sy.statoverall_2 
+	, sy.statoverall_3 
+	, sy.statoverall_4 
+	, sy.statoverall_5 
+	, sy.statoverall_indiv
+	, sy.statoverall_team
+	, sy.team_size
+	, sy.team_size_found
+	, sy.comments
+	, sy.subscrip_key
+	, sy.mail_confirm
+	, sy.email
+	, sy.match_value
+	, sy.match_by_field 
+	, sy.row_number 
 FROM main_studentscore sc 
 INNER JOIN main_market m ON m.id = sc.market_id 
 INNER JOIN main_student stu ON stu.id = sc.student_id 
 LEFT JOIN main_team t ON t.id = sc.team_id 
 LEFT JOIN main_teammember tm ON tm.id = sc.team_member_id 
+LEFT JOIN main_simulation2survey sy ON sy.team_id = sc.team_id AND sy.student_id = sc.student_id 
 """
     params = []
     filter_query = []
@@ -138,7 +227,10 @@ LEFT JOIN main_teammember tm ON tm.id = sc.team_member_id
     if len(filter_query) > 0:
         where_sql += " \n ".join(filter_query)
     sql += where_sql
-    sql += " \n ORDER BY rubric_score_percentage DESC"
+    if with_survey == False:
+        sql += " \n ORDER BY m.simulation_id, rubric_score_percentage DESC"
+    else:
+        sql += " \n ORDER BY m.simulation_id, t.teamID, tm.teammember_order"
     # execute safely
     with connection.cursor() as cursor:
         #print(cursor.mogrify(sql, params))

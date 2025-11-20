@@ -93,6 +93,7 @@
                         <button type="submit" class="btn btn-success me-2">Apply Filters</button>
                         <a href="?" class="btn btn-secondary me-2">Reset</a>
                         <button type="button" id="exportBtn" class="btn btn-primary me-2">Export</button>
+                        <button type="button" id="exportBtnWithSurvey" class="btn btn-primary me-2">Export With Survey</button>
                     </div>
                 </div>
             </form>
@@ -129,6 +130,7 @@
                     <th>Team Evaluation</th>
                     <th>Period joined</th>
                     <th>Tutorial Quiz</th>
+                    <th>Survey Taken</th>
                 </tr>
             </thead>
             <tbody>
@@ -157,10 +159,11 @@
                     <td>{{ obj.team_evaluation_percentage }}</td>
                     <td>{{ obj.period_joined }}</td>
                     <td>{{ obj.tutorial_quiz_percentage }}</td>
+                    <td>{{ obj.survey_taken }} / {{ obj.team_size }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="10" class="text-center">No item found.</td>
+                    <td colspan="11" class="text-center">No item found.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -279,6 +282,22 @@
 
             // Change form action to Excel export URL
             $form.attr("action", "{% url 'studentScoreReportXlx' %}");
+
+            // Submit the form
+            $form.submit();
+
+            // Restore original action
+            $form.attr("action", originalAction);
+        });
+
+        $("#exportBtnWithSurvey").click(function() {
+            var $form = $("#filterForm");
+
+            // Store original action
+            var originalAction = $form.attr("action") || "";
+
+            // Change form action to Excel export URL
+            $form.attr("action", "{% url 'studentScoreReportWithSurveyXlx' %}");
 
             // Submit the form
             $form.submit();

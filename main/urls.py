@@ -23,6 +23,7 @@ urlpatterns = [
 
     path('get_markets_list/', student_score_views.get_markets_list, name='getMarketsList'),
     path('student_score_report_xlx/', student_score_views.student_score_report_xlx, name='studentScoreReportXlx'),
+    path('student_score_report_with_survey_xlx/', student_score_views.student_score_report_with_survey_xlx, name='studentScoreReportWithSurveyXlx'),
 
     path('upload_team_file/', team_views.upload_team_file, name='uploadTeamFile'),
     path('process_team_file_sheet/', team_views.process_team_file_sheet, name='processTeamFileSheet'),

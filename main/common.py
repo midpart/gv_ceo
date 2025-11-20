@@ -14,11 +14,14 @@ import re
 import openpyxl
 from django.http import HttpResponse
 
-def str_to_bigint(value):
+def str_to_bigint(value, default = None):
     try:
         return int(value)
     except (ValueError, TypeError):
-        return None
+        if default is None:
+            return None
+        else: 
+            return default
 
 def str_to_subscription_key_simulation_number(value):
     try:
@@ -35,9 +38,11 @@ def str_to_subscription_key_simulation_number(value):
     
 def str_to_str(value):
     try:
-        if value is not None:
-            return value.strip()
-        return value
+        if pd.isna(value):
+            return ""
+        # Convert everything to string first
+        value_str = str(value)
+        return value_str.strip()
     except (ValueError, TypeError):
         return None
 
