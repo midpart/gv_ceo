@@ -2,10 +2,57 @@
 {% block title %}Home{% endblock %}
 {% block content %}
   <div class="p-5 mb-4 bg-white rounded-3 shadow-sm">
-    <h1 class="display-5 fw-bold">Welcome to My Django Site</h1>
+    <h1 class="display-5 fw-bold">Welcome to Go Venture CEO simulation data</h1>
     <p class="col-md-8 fs-5">
-      This page uses a default Bootstrap 5 theme.
+      This website is for storing data from simlulation of CEO.
     </p>
-    <button class="btn btn-primary btn-lg">Learn more</button>
+    <!-- <button class="btn btn-primary btn-lg">Learn more</button> -->
   </div>
+
+<div class="row">
+  <div class="col-sm-3 mb-3 mb-sm-0">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Students</h5>
+        <p class="card-text">We have total <b>{{total_student}}</b> Student{% if total_student > 0 %}s {% endif %}.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Simulations</h5>
+        <p class="card-text">We have total <b>{{total_simulation}}</b> Simulation{% if total_simulation > 0 %}s {% endif %}.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Markets</h5>
+        <p class="card-text">We have total <b>{{total_market}}</b> Market{% if total_market > 0 %}s {% endif %}.</p>
+        <a href="{% url 'manageMarkets' %}" class="btn btn-primary">Go to Market</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Teams</h5>
+        <p class="card-text">We have total <b>{{total_team}}</b> Team{% if total_team > 0 %}s {% endif %}.</p>
+        <a href="{% url 'teamMemberReport' %}" class="btn btn-primary">Go to Team</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-3 p-3">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Reports</h5>
+        <a href="{% url 'studentScoreReport' %}" class="btn btn-primary">Go to Report</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 {% endblock %}

@@ -146,7 +146,8 @@ SELECT
 	, sy.email
 	, sy.match_value
 	, sy.match_by_field 
-	, sy.row_number 
+	, sy.row_number
+    , CASE WHEN sy.id IS NULL THEN 0 ELSE 1 END AS sim2_complete
 FROM main_studentscore sc 
 INNER JOIN main_market m ON m.id = sc.market_id 
 INNER JOIN main_student stu ON stu.id = sc.student_id 

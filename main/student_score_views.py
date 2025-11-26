@@ -390,7 +390,7 @@ def student_score_report_with_survey_xlx(request):
     ws.append(["ID", "Studienr", "TeamID", "is_3pt", "is_mmf", "is_fix_alloc", "role", "Name", "Age", "Gender", "EmailAddress", "Campus", "SubscriptionKey", "Player Id", "Company"
                , "GoVenture Subscription Key | Simulation Number", "Rubric Score", "Balanced Score", "Participation Score"
                , "Participation Score Info", "Rank Score", "HR Score", "Ethics Score", "Competency Quiz", "Team Evaluation"
-               , "Period joined", "Tutorial Quiz", "indiv_time_spent", "indiv_time_spent_t", "joint_time_spent", "joint_time_spent_t", "days_in_person", "days_in_person_t", "responsib_clear", "responsib_clear_t"
+               , "Period joined", "Tutorial Quiz", "sim2_complete", "indiv_time_spent", "indiv_time_spent_t", "joint_time_spent", "joint_time_spent_t", "days_in_person", "days_in_person_t", "responsib_clear", "responsib_clear_t"
                , "responsib_own", "responsib_own_t", "responsib_change", "responsib_change_t", "areas_change_1", "areas_change_2", "areas_change_3"
                , "areas_change_4", "areas_change_indiv"
                , "areas_change_team", "responsib_outside", "responsib_outside_t", "ta_a", "ta_b", "ta_c", "ta_indiv", "ta_team", "la_a", "la_b", "la_c", "la_indiv", "la_team"
@@ -398,7 +398,8 @@ def student_score_report_with_survey_xlx(request):
                , "tms_cred_team", "tms_co1", "tms_co2", "tms_co3", "tms_co4", "tms_co5", "tms_coord_indiv", "tms_coord_team", "att_market_sales", "att_production", "att_randd"
                , "focus_shift_1", "focus_shift_2", "focus_shift_3", "focus_shift_4", "focus_shift_indiv", "focus_shift_team", "compet_import1", "compet_import2", "compet_import3"
                , "compet_import_indiv", "pcs_1", "pcs_2", "pcs_3", "pcs_indiv", "pcs_team", "statoverall_1", "statoverall_2", "statoverall_3", "statoverall_4", "statoverall_5"
-               , "statoverall_indiv", "statoverall_team", "team_size", "team_size_found", "comments", "subscrip_key", "mail_confirm", "email", "match_value", "match_by_field", "row_number"])
+               , "statoverall_indiv", "statoverall_team", "team_size", "team_size_found", "comments", "subscrip_key", "mail_confirm", "email", "match_value", "match_by_field"
+               , "row_number"])
 
     # Add data
     for row in rows:
@@ -408,7 +409,7 @@ def student_score_report_with_survey_xlx(request):
                    row["company"], f"{row["go_venture_subscription_key"]} | #{row["go_venture_simulation_number"]}", row["rubric_score_percentage"], 
                    row["balanced_score_percentage"], row["participation_percentage"], f"({row["participation_in"]} of {row["participation_total"]})"
                    , row["rank_score_percentage"], row["hr_score_percentage"], row["ethics_score_percentage"], row["competency_quiz_percentage"], 
-                   row["team_evaluation_percentage"], row["period_joined"], row["tutorial_quiz_percentage"]
+                   row["team_evaluation_percentage"], row["period_joined"], row["tutorial_quiz_percentage"], row["sim2_complete"]
                    , row["indiv_time_spent"], row["indiv_time_spent_t"], row["joint_time_spent"], row["joint_time_spent_t"], row["days_in_person"], row["days_in_person_t"], row["responsib_clear"], row["responsib_clear_t"]
                    , row["responsib_own"], row["responsib_own_t"], row["responsib_change"], row["responsib_change_t"], row["areas_change_1"], row["areas_change_2"], row["areas_change_3"]
                , row["areas_change_4"], row["areas_change_indiv"], row["areas_change_team"], row["responsib_outside"], row["responsib_outside_t"]
