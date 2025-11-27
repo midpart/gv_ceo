@@ -256,8 +256,6 @@ class Simulation2Survey(models.Model):
     statoverall_3 = models.IntegerField(default=0)
     statoverall_4 = models.IntegerField(default=0)
     statoverall_5 = models.IntegerField(default=0)
-    statoverall_indiv = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
-    statoverall_team = models.DecimalField(default=0, decimal_places = 3, max_digits=4)
 
     team_size = models.IntegerField(default=0)
     team_size_found = models.IntegerField(default=0)

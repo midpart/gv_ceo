@@ -106,12 +106,24 @@ def process_simulation2_survey_file_sheet(request):
                 if temp_student is None:
                     no_student_found_list.append(row_no)
                     continue
-
-                already_exists_in_sheet = False
-                if len(all_survey_current_sheet) > 0:
-                    already_exists_in_sheet = any(obj.student.id == temp_student.id for obj in all_survey_current_sheet)
                 
-                if already_exists_in_sheet == True:
+                
+                statoverall_4 = str_to_bigint(row.get('statoverall_4'), 0)
+                is_complete = False
+                if statoverall_4 == 1:
+                    is_complete = True
+
+                already_exists_in_sheet = None
+                if len(all_survey_current_sheet) > 0:
+                    already_exists_in_sheet = next((s for s in all_survey_current_sheet if s.student.id == temp_student.id), None)#any(obj.student.id == temp_student.id for obj in all_survey_current_sheet)
+                
+                # already have found this row and current row is not complete
+                if already_exists_in_sheet is not None and is_complete == False:
+                    duplicate_student_found_list.append(row_no)
+                    continue
+
+                 # already have found this row and that was complete also   
+                if  already_exists_in_sheet is not None and already_exists_in_sheet.statoverall_4 == 1:
                     duplicate_student_found_list.append(row_no)
                     continue
 
@@ -124,14 +136,17 @@ def process_simulation2_survey_file_sheet(request):
                 is_new = True
                 temp_survey = survey_lookup.get((temp_student.id, simulation_obj.id))#next((s for s in all_survey_data if s.student_id == temp_student.id and s.simulation_id == simulation_id), None)
                 if temp_survey is None:
-                    temp_survey = Simulation2Survey(
-                        student = temp_student,
-                        simulation = simulation_obj,
-                        team = temp_team,
-                        team_member = temp_team_member,
-                        creation_date_time = timezone.now(),
-                        created_by = request.user
-                    )
+                    if already_exists_in_sheet is None:
+                        temp_survey = Simulation2Survey(
+                            student = temp_student,
+                            simulation = simulation_obj,
+                            team = temp_team,
+                            team_member = temp_team_member,
+                            creation_date_time = timezone.now(),
+                            created_by = request.user
+                        )
+                    else:
+                        temp_survey = already_exists_in_sheet 
                 else:
                     is_new = False
                 temp_survey.modification_date_time = timezone.now()
@@ -259,14 +274,13 @@ def process_simulation2_survey_file_sheet(request):
                 temp_survey.statoverall_3 = str_to_bigint(row.get('statoverall_3'), 0)
                 temp_survey.statoverall_4 = str_to_bigint(row.get('statoverall_4'), 0)
                 temp_survey.statoverall_5 = str_to_bigint(row.get('statoverall_5'), 0)
-                temp_survey.statoverall_indiv = (temp_survey.statoverall_1 + temp_survey.statoverall_2 + temp_survey.statoverall_3 
-                                                 + temp_survey.statoverall_4 + temp_survey.statoverall_5) / 5
-                temp_dto.statoverall_indiv += temp_survey.statoverall_indiv
 
-                if is_new == True:
-                    add_data_list.append(temp_survey)
-                else:
-                    update_data_list.append(temp_survey)
+                # only add when we did not do that before
+                if already_exists_in_sheet is None:
+                    if is_new == True:
+                        add_data_list.append(temp_survey)
+                    else:
+                        update_data_list.append(temp_survey)
 
             for dto in team_data_list:
                 size = dto.team_size_found
@@ -286,7 +300,6 @@ def process_simulation2_survey_file_sheet(request):
                 dto.focus_shift_team = dto.focus_shift_indiv / size
                 dto.compet_import_team = dto.compet_import_indiv / size
                 dto.pcs_team = dto.pcs_indiv / size
-                dto.statoverall_team = dto.statoverall_indiv / size
 
                 temp_team_data_list = [obj for obj in all_survey_current_sheet if obj.team.id == dto.team_id]
                 for tempData in temp_team_data_list:
@@ -306,7 +319,6 @@ def process_simulation2_survey_file_sheet(request):
                     tempData.focus_shift_team = dto.focus_shift_team
                     tempData.compet_import_team = dto.compet_import_team
                     tempData.pcs_team = dto.pcs_team
-                    tempData.statoverall_team = dto.statoverall_team
                     tempData.team_size = dto.team_size
                     tempData.team_size_found = dto.team_size_found
 
@@ -332,7 +344,7 @@ def process_simulation2_survey_file_sheet(request):
                                                           , "focus_shift_1", "focus_shift_2", "focus_shift_3", "focus_shift_4", "focus_shift_indiv", "focus_shift_team"
                                                           , "compet_import1", "compet_import2", "compet_import3", "compet_import_indiv", "compet_import_team"
                                                           , "pcs_1", "pcs_2", "pcs_3", "pcs_indiv", "pcs_team"
-                                                          , "statoverall_1", "statoverall_2", "statoverall_3", "statoverall_4", "statoverall_5", "statoverall_indiv", "statoverall_team"
+                                                          , "statoverall_1", "statoverall_2", "statoverall_3", "statoverall_4", "statoverall_5"
                                                           , "team_size"
                                                           , "team_size_found"
                                                           , "comments"

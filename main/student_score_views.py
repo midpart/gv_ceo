@@ -398,7 +398,7 @@ def student_score_report_with_survey_xlx(request):
                , "tms_cred_team", "tms_co1", "tms_co2", "tms_co3", "tms_co4", "tms_co5", "tms_coord_indiv", "tms_coord_team", "att_market_sales", "att_production", "att_randd"
                , "focus_shift_1", "focus_shift_2", "focus_shift_3", "focus_shift_4", "focus_shift_indiv", "focus_shift_team", "compet_import1", "compet_import2", "compet_import3"
                , "compet_import_indiv", "pcs_1", "pcs_2", "pcs_3", "pcs_indiv", "pcs_team", "statoverall_1", "statoverall_2", "statoverall_3", "statoverall_4", "statoverall_5"
-               , "statoverall_indiv", "statoverall_team", "team_size", "team_size_found", "comments", "subscrip_key", "mail_confirm", "email", "match_value", "match_by_field"
+               , "team_size", "team_size_found", "comments", "subscrip_key", "mail_confirm", "email", "match_value", "match_by_field"
                , "row_number"])
 
     # Add data
@@ -419,7 +419,7 @@ def student_score_report_with_survey_xlx(request):
                , row["tms_co3"], row["tms_co4"], row["tms_co5"], row["tms_coord_indiv"], row["tms_coord_team"], row["att_market_sales"], row["att_production"], row["att_randd"]
                , row["focus_shift_1"], row["focus_shift_2"], row["focus_shift_3"], row["focus_shift_4"], row["focus_shift_indiv"], row["focus_shift_team"], row["compet_import1"]
                , row["compet_import2"], row["compet_import3"], row["compet_import_indiv"], row["pcs_1"], row["pcs_2"], row["pcs_3"], row["pcs_indiv"], row["pcs_team"]
-               , row["statoverall_1"], row["statoverall_2"], row["statoverall_3"], row["statoverall_4"], row["statoverall_5"], row["statoverall_indiv"], row["statoverall_team"]
+               , row["statoverall_1"], row["statoverall_2"], row["statoverall_3"], row["statoverall_4"], row["statoverall_5"]
                , row["team_size"], row["team_size_found"], row["comments"], row["subscrip_key"], row["mail_confirm"], row["email"], row["match_value"], row["match_by_field"]
                , row["row_number"]])
 

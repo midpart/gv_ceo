@@ -53,6 +53,3 @@ class TeamSim2Survey:
 
     pcs_indiv: float = 0
     pcs_team: float = 0
-
-    statoverall_indiv: float = 0
-    statoverall_team: float = 0

@@ -136,8 +136,6 @@ SELECT
 	, sy.statoverall_3 
 	, sy.statoverall_4 
 	, sy.statoverall_5 
-	, sy.statoverall_indiv
-	, sy.statoverall_team
 	, sy.team_size
 	, sy.team_size_found
 	, sy.comments
