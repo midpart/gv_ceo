@@ -179,7 +179,7 @@ LEFT JOIN main_simulation2survey sy ON sy.team_id = sc.team_id AND sy.student_id
             id_list = ', '.join(str(c) for c in selected_market_ids)
             filter_query.append(f"AND sc.market_id IN ({id_list})")
 
-    if simulation_id is not None and simulation_id.isdigit():
+    if simulation_id is not None and simulation_id:
         filter_query.append("AND m.simulation_id = %s")
         params.append(simulation_id)
 
