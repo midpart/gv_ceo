@@ -276,3 +276,34 @@ class Simulation2Survey(models.Model):
     def __str__(self):
         return f"{self.student.name}, sim: {self.simulation.name}"
 
+
+class Simulation3Survey(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.RESTRICT, related_name='student_simulation3_survey', null=False)
+    simulation = models.ForeignKey(Simulation, on_delete=models.RESTRICT, related_name='simulation_simulation3_survey', null=False)
+
+    sim3_day1 = models.CharField(max_length=1000)
+    sim3_day2 = models.CharField(max_length=1000)
+    sim3_day3 = models.CharField(max_length=1000)
+    sim3_day4 = models.CharField(max_length=1000)
+    sim3_day5 = models.CharField(max_length=1000)
+    sim3_subkey = models.CharField(max_length=255)
+    sim3_confirm_email = models.CharField(max_length=255)
+    email = models.CharField(max_length=255)
+    
+    statoverall_1 = models.IntegerField(default=0)
+    statoverall_2 = models.IntegerField(default=0)
+    statoverall_3 = models.IntegerField(default=0)
+    statoverall_4 = models.IntegerField(default=0)
+    statoverall_5 = models.IntegerField(default=0)
+
+    match_value = models.CharField(max_length=255)
+    match_by_field = models.CharField(max_length=255)
+    row_number = models.IntegerField(default=0)
+
+    creation_date_time = models.DateTimeField(auto_now_add=True)
+    modification_date_time = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='Simulation3Survey_created')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='Simulation3Survey_modified')
+    
+    def __str__(self):
+        return f"{self.student.name}, sim: {self.simulation.name}"

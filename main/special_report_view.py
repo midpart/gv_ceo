@@ -60,21 +60,24 @@ def process_download_special_report(request):
                 Navn = row["Navn"]
                 StadsPersonId = row["StadsPersonId"]
                 Email = row["Email"]
-                Karakter = row["Karakter"]
-                dato = row["Mundtlig eksamen - dato"]
-                starttid = row["Mundtlig eksamen - starttid"]
-                sluttid = row["Mundtlig eksamen - sluttid"]
-                lokale = row["Mundtlig eksamen - lokale"]
-                Mødetid = row["Mødetid"]
-                Gruppe = row["Gruppe"]
+                # Karakter = row["Karakter"]
+                # dato = row["Mundtlig eksamen - dato"]
+                # starttid = row["Mundtlig eksamen - starttid"]
+                # sluttid = row["Mundtlig eksamen - sluttid"]
+                # lokale = row["Mundtlig eksamen - lokale"]
+                # Mødetid = row["Mødetid"]
+                # Gruppe = row["Gruppe"]
 
                 temp_student_score = next((s for s in all_score_report if s["email_address"] == Email), None)#all_students.filter( email_address = Email).first()
+                temp_student = next((s for s in all_students if s.email_address== Email), None)
                 balance_score = None
                 rubic_score = None
                 team_evaluation = None
                 is_3pt = None
                 is_mmf = None
                 is_fix_alloc = None
+                subscription_key = temp_student.subscription_key if temp_student is not None else ""
+                isFoundStudent =  "1" if temp_student is not None else "0"
                 if temp_student_score is not None:
                     balance_score = temp_student_score["balanced_score_percentage"]
                     rubic_score = temp_student_score["rubric_score_percentage"]
@@ -88,19 +91,21 @@ def process_download_special_report(request):
                     "Navn": Navn,
                     "StadsPersonId": StadsPersonId,
                     "Email": Email,
-                    "Karakter": Karakter,
-                    "Mundtlig eksamen - dato": dato,
-                    "Mundtlig eksamen - starttid": starttid,
-                    "Mundtlig eksamen - sluttid": sluttid,
-                    "Mundtlig eksamen - lokal": lokale,
-                    "Mødetid": Mødetid,
-                    "Gruppe": Gruppe,
+                    "Subscription Key": subscription_key,
+                    # "Karakter": Karakter,
+                    # "Mundtlig eksamen - dato": dato,
+                    # "Mundtlig eksamen - starttid": starttid,
+                    # "Mundtlig eksamen - sluttid": sluttid,
+                    # "Mundtlig eksamen - lokal": lokale,
+                    # "Mødetid": Mødetid,
+                    # "Gruppe": Gruppe,
                     "Balanced score": balance_score,
                     "Rubric Score": rubic_score,
                     "Team Evaluation": team_evaluation,
-                    "is_3pt": is_3pt,
-                    "is_mmf": is_mmf,
-                    "is_fix_alloc": is_fix_alloc,
+                    # "is_3pt": is_3pt,
+                    # "is_mmf": is_mmf,
+                    # "is_fix_alloc": is_fix_alloc,
+                    "isFoundStudent": isFoundStudent,
                 })
             
              # --- 3. CREATE NEW DATAFRAME ---
@@ -108,11 +113,12 @@ def process_download_special_report(request):
 
             # --- 4. CONVERT TO CSV STRING ---
             buffer = io.StringIO()
-            new_df.to_csv(buffer, index=False)
+            new_df.to_csv(buffer, index=False, encoding="utf-8-sig")
+            buffer.seek(0)
             csv_string = buffer.getvalue()
 
             # --- 5. RETURN FILE DOWNLOAD ---
-            response = HttpResponse(csv_string, content_type="text/csv")
+            response = HttpResponse(csv_string, content_type="text/csv; charset=utf-8")
             response["Content-Disposition"] = 'attachment; filename=f"{filename}_processed.csv"'
             return response
         except Exception as e:
