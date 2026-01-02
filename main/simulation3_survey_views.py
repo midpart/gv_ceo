@@ -150,11 +150,11 @@ def process_simulation3_survey_file_sheet(request):
 
                 all_survey_current_sheet.append(temp_survey)
 
-                temp_survey.sim3_day1 = str_to_bigint(row.get('sim3_day1'), 0)
-                temp_survey.sim3_day2 = str_to_bigint(row.get('sim3_day2'), 0)
-                temp_survey.sim3_day3 = str_to_bigint(row.get('sim3_day3'), 0)
-                temp_survey.sim3_day4 = str_to_bigint(row.get('sim3_day4'), 0)
-                temp_survey.sim3_day5 = str_to_bigint(row.get('sim3_day5'), 0)
+                temp_survey.sim3_day1 = str_to_str(row.get('sim3_day1'))
+                temp_survey.sim3_day2 = str_to_str(row.get('sim3_day2'))
+                temp_survey.sim3_day3 = str_to_str(row.get('sim3_day3'))
+                temp_survey.sim3_day4 = str_to_str(row.get('sim3_day4'))
+                temp_survey.sim3_day5 = str_to_str(row.get('sim3_day5'))
 
                 temp_survey.statoverall_1 = str_to_bigint(row.get('statoverall_1'), 0)
                 temp_survey.statoverall_2 = str_to_bigint(row.get('statoverall_2'), 0)

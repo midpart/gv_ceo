@@ -1,6 +1,6 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from . import views, student_views, student_score_views, market_views, team_views, simulation2_survey_views, simulation3_survey_views, special_report_view
+from . import views, student_views, student_score_views, market_views, team_views, simulation2_survey_views, simulation3_survey_views, special_report_view, all_report_view
 
 urlpatterns = [
     path('', views.index, name='index'),
@@ -38,5 +38,8 @@ urlpatterns = [
 
     path('download_special_report/', special_report_view.download_special_report, name='downloadSpecialReport'),
     path('process_download_special_report/', special_report_view.process_download_special_report, name='processDownloadSpecialReport'),
+
+    path('all_data_report/', all_report_view.student_all_report, name='allDataReport'),
+    path('all_data_report_xlx/', all_report_view.student_all_report_xlx, name='allDataReportXlx'),
 
 ]

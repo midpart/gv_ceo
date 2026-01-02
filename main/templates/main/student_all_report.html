@@ -1,0 +1,116 @@
+{% extends "main/base.html" %}
+{% load form_tags %}
+{% block title %}Student All Data Report{% endblock %}
+{% block content %}
+
+<div class="container mt-5">
+    <h2 class="mb-4">All Data Report</h2>
+    
+    <div id="alert-container">
+        {% if error_message %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ error_message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+    </div>
+
+    <p>Total Data: {{ total_rows }} <a href="{% url 'allDataReportXlx' %}" class="btn btn-primary">Export</a></p>
+    <!-- Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped" id="marketTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>Sl</th>
+                    <th>studienr</th>
+                    <th>student_name</th>
+                    <th>email_address</th>
+                    <th>campus</th>
+                    <th>subscription_key</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>simulation_name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for obj in page_obj %}
+                <tr id="item-row-{{ obj.id }}">
+                    <td>{{ forloop.counter0|add:page_obj.start_index|add:-0 }}</td>
+                    <td>{{ obj.studienr }}</td>
+                    <td>{{ obj.student_name }}</td>
+                    <td>{{ obj.email_address }}</td>
+                    <td>{{ obj.campus }}</td>
+                    <td>{{ obj.subscription_key }}</td>
+                    <td>{{ obj.age_in_year }}</td>
+                    <td>{{ obj.gender }}</td>
+                    <td>{{ obj.simulation_name }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="11" class="text-center">No item found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if page_obj.has_other_pages %}
+    <!-- Pagination -->
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+
+<div id="overlay" style="display:none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block script %}
+<script>
+    $(document).ready(function () {
+
+
+        $("#exportBtn").click(function() {
+            var $form = $("#filterForm");
+
+            // Store original action
+            var originalAction = $form.attr("action") || "";
+
+            // Change form action to Excel export URL
+            $form.attr("action", "{% url 'allDataReportXlx' %}");
+
+            // Submit the form
+            $form.submit();
+
+            // Restore original action
+            $form.attr("action", originalAction);
+        });
+    });
+
+</script>
+{% endblock %}
