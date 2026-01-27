@@ -6,7 +6,7 @@ import pandas as pd
 from django import forms
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from . models import Student, Market, Simulation, StudentScore, ImportFileLog
+from . models import Student, Market, Simulation, StudentScore, ImportFileLog, SystemSettings
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.conf import settings
@@ -91,3 +91,13 @@ def save_file_export_log(filename, remarks, total_row, total_insert, total_updat
        modified_by = user,
    )
    temp_ob.save()
+
+
+def get_active_academic_year():
+    settings = SystemSettings.objects.first()
+    active_academic_year = 0
+    if settings is not None:
+        active_academic_year = settings.active_academic_year
+
+    return active_academic_year
+    

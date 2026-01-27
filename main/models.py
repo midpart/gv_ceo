@@ -13,10 +13,11 @@ class Student(models.Model):
     email_address = models.CharField(max_length=255)
     campus = models.CharField(max_length=255)
     subscription_key = models.CharField(max_length=255, null=False, unique=True)
-    market_member_num = models.IntegerField(null=False, default=0)
-    simulation_number = models.BigIntegerField(null=True, blank=True)
+    # market_member_num = models.IntegerField(null=False, default=0)
+    # simulation_number = models.BigIntegerField(null=True, blank=True)
     age_in_year = models.IntegerField(null=True, blank=True)
     gender = models.CharField(max_length=10, null=True, blank=True)
+    academic_year = models.IntegerField(null=False, default=0)
 
     creation_date_time = models.DateTimeField(auto_now_add=True)
     modification_date_time = models.DateTimeField(default=timezone.now)
@@ -28,6 +29,8 @@ class Student(models.Model):
     
 class Simulation(models.Model):
     name = models.CharField(max_length=1000, null=False, unique=True)
+    number = models.IntegerField(null=False, default=0)
+    academic_year = models.IntegerField(null=False, default=0)
 
     creation_date_time = models.DateTimeField(auto_now_add=True)
     modification_date_time = models.DateTimeField(default=timezone.now)
@@ -58,7 +61,7 @@ class Team(models.Model):
     name = models.CharField(max_length=255)
     teamID = models.IntegerField(null=False, default=0)
     sim_team_id = models.CharField(max_length=255, null=True)
-    is_mmf = models.BooleanField(default=False)
+    is_mmf = models.BooleanField(default=None, null=True)
     is_3pt = models.BooleanField(default=False)
     is_fix_alloc = models.BooleanField(default=False)
 
@@ -307,3 +310,19 @@ class Simulation3Survey(models.Model):
     
     def __str__(self):
         return f"{self.student.name}, sim: {self.simulation.name}"
+
+class SystemSettings(models.Model):
+    id = models.PositiveSmallIntegerField(
+        primary_key=True,
+        default=1,
+        editable=False
+    )
+    active_academic_year = models.IntegerField(null=False)
+
+    creation_date_time = models.DateTimeField(auto_now_add=True)
+    modification_date_time = models.DateTimeField(default=timezone.now)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True,  related_name='system_settings_created')
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='ssystem_settings_modified')
+    
+    def __str__(self):
+        return f"{self.active_academic_year}"

@@ -5,13 +5,30 @@ from django.conf import settings
 from django.utils import timezone
 # Register your models here.
 # admin.site.register(Student)
+@admin.register(SystemSettings)
+class SystemSettings(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.created_by = request.user
+        obj.modified_by = request.user
+        obj.modification_date_time = timezone.now()
+        return super().save_model(request, obj, form, change)
+    
+    list_display = ('id', 'active_academic_year', 'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
+    list_per_page = settings.PER_PAGE
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'studienr', 'name', 'age_in_year', 'gender', 'email_address'
-                    , 'campus', 'subscription_key', 'market_member_num'
-                    , 'simulation_number', 'creation_date_time', 'created_by')  
-    search_fields = ('name', 'studienr', 'subscription_key', 'age_in_year')
-    list_filter = ('campus', 'gender',)
+    list_display = ('id', 'studienr', 'name', 'age_in_year', 'gender', 'academic_year','email_address'
+                    , 'campus', 'subscription_key', 'creation_date_time', 'created_by')  
+    search_fields = ('name', 'studienr', 'subscription_key', 'age_in_year', 'academic_year')
+    list_filter = ('campus', 'gender','academic_year',)
     list_per_page = settings.PER_PAGE
 
     def has_add_permission(self, request):
@@ -26,7 +43,7 @@ class SimulationAdmin(admin.ModelAdmin):
         obj.modification_date_time = timezone.now()
         return super().save_model(request, obj, form, change)
     
-    list_display = ('id', 'name', 'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
+    list_display = ('id', 'name', 'number', 'academic_year', 'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
     list_per_page = settings.PER_PAGE
 
 @admin.register(Market)

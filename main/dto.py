@@ -63,8 +63,10 @@ class AllData:
     subscription_key: str
     age_in_year: int
     gender: str
+    cpl_data: bool = None
 
     simulation_name: str = None
+    sim_number: int = None
     market_name: str = None
     market_number: int = None
 

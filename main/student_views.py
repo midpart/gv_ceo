@@ -49,8 +49,8 @@ def process_sheet(request):
                 emailAdress = str_to_str(row.get('EmailAdress'))
                 campus = str_to_str(row.get('Campus'))
                 subscriptionKey = row.get('SubscriptionKey')
-                marketMemberNum = row.get('MarketMemberNum')
-                simulationNumber = row.get('SimulationNumber')
+                # marketMemberNum = row.get('MarketMemberNum')
+                # simulationNumber = row.get('SimulationNumber')
                 age = row.get('Age')
                 gender = str_to_str(row.get('Gender'))
                 
@@ -69,8 +69,8 @@ def process_sheet(request):
                 temp_student.name = name
                 temp_student.email_address = emailAdress
                 temp_student.campus = campus
-                temp_student.market_member_num = str_to_bigint(marketMemberNum)
-                temp_student.simulation_number = str_to_bigint(simulationNumber)
+                # temp_student.market_member_num = str_to_bigint(marketMemberNum)
+                # temp_student.simulation_number = str_to_bigint(simulationNumber)
                 temp_student.age_in_year = str_to_bigint(age)
                 temp_student.gender = gender
                 temp_student.modified_by = request.user
@@ -92,8 +92,8 @@ def process_sheet(request):
                                                           , "name"
                                                           , "email_address"
                                                           , "campus"
-                                                          , "market_member_num"
-                                                          , "simulation_number"
+                                                        #   , "market_member_num"
+                                                        #   , "simulation_number"
                                                           , "age_in_year"
                                                           , "gender"
                                                           , "modified_by"

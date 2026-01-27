@@ -7,13 +7,14 @@ import pandas as pd
 from django import forms
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from . models import Student, Market, Simulation, Team, StudentScore, ImportFileLog
+from . models import Student, Market, Simulation, Team, StudentScore, SystemSettings
 from django.utils import timezone
 from django.core.paginator import Paginator
 from django.conf import settings
 import re
 import openpyxl
 from django.http import HttpResponse
+from . common import get_active_academic_year
 
 # Create your views here.
 
@@ -29,7 +30,9 @@ def index(request):
         total_simulation = Simulation.objects.count()
         total_market = Market.objects.count()
         total_team = Team.objects.count()
+        active_academic_year = get_active_academic_year()
+
     except Exception as e:
         error_message = str(e)
     return render(request, 'main/index.html', {"total_student": total_student,"total_simulation": total_simulation,"total_market": total_market
-                                               ,"total_team": total_team, "error_message": error_message})
+                                               ,"total_team": total_team, "active_academic_year": active_academic_year, "error_message": error_message})

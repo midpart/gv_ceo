@@ -345,3 +345,39 @@ def get_all_campus():
         rows = dictfetchall(cursor)
 
     return rows
+
+def get_all_student_simnulation_Count(simulation_ids):
+    filter_query = []
+    if simulation_ids is not None and len(simulation_ids) > 0:
+        id_list = ', '.join(str(c) for c in simulation_ids)
+        filter_query.append(f"AND m.simulation_id IN ({id_list})")
+
+    condition_query = ""
+    if len(filter_query) > 0:
+        condition_query += " \n ".join(filter_query)
+
+    sql = f"""
+    SELECT
+	a.student_id
+	, COUNT(*) AS total_sim_count
+FROM (
+	SELECT
+		sc.student_id
+		, m.simulation_id
+	FROM main_studentscore sc 
+	INNER JOIN main_market m ON m.id = sc.market_id
+    WHERE 1 = 1 {condition_query}
+	GROUP BY sc.student_id
+	, m.simulation_id 
+) AS a
+GROUP BY a.student_id
+    """
+
+    with connection.cursor() as cursor:
+        #print(cursor.mogrify(sql, params))
+        #print(get_sql_debug(sql, params))  # for debugging only
+        #rows = cursor.fetchall()
+        cursor.execute(sql)
+        rows = dictfetchall(cursor)
+
+    return rows

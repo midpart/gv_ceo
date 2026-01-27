@@ -183,8 +183,12 @@ def process_team_file_sheet(request):
 
                 temp_team.sim_team_id = sim_team_id
                 temp_team.is_fix_alloc = fix_alloc_parse
-                temp_team.is_mmf = True if male_count > 0 and female_count > 0 else False
                 temp_team.is_3pt = True if male_count + female_count == 3 else False
+                if temp_team.is_3pt == True:
+                    temp_team.is_mmf = True if male_count == 2 and female_count == 1 else False
+                else: 
+                    temp_team.is_mmf = None
+
                 temp_team.modification_date_time = timezone.now()
                 temp_team.modified_by = request.user
 

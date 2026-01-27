@@ -29,7 +29,10 @@
                     <th>subscription_key</th>
                     <th>Age</th>
                     <th>Gender</th>
+                    <th>cpl_data</th>
                     <th>simulation_name</th>
+                    <th>simu_number</th>
+                    <th>rank_score</th>
                 </tr>
             </thead>
             <tbody>
@@ -43,11 +46,14 @@
                     <td>{{ obj.subscription_key }}</td>
                     <td>{{ obj.age_in_year }}</td>
                     <td>{{ obj.gender }}</td>
+                    <td>{{ obj.cpl_data }}</td>
                     <td>{{ obj.simulation_name }}</td>
+                    <td>{{ obj.sim_number }}</td>
+                    <td>{{ obj.rank_score_percentage }}</td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="11" class="text-center">No item found.</td>
+                    <td colspan="12" class="text-center">No item found.</td>
                 </tr>
                 {% endfor %}
             </tbody>

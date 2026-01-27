@@ -13,6 +13,13 @@
   <div class="col-sm-3 mb-3 mb-sm-0">
     <div class="card">
       <div class="card-body">
+        <h5 class="card-title">Active Academic Year</h5>
+        <p class="card-text">{% if active_academic_year <= 0 %}No settings found{% else %} <b>{{ active_academic_year }}</b> {% endif %}</p>
+      </div>
+    </div>
+  </div><div class="col-sm-3 mb-3 mb-sm-0">
+    <div class="card">
+      <div class="card-body">
         <h5 class="card-title">Students</h5>
         <p class="card-text">We have total <b>{{total_student}}</b> Student{% if total_student > 0 %}s {% endif %}.</p>
       </div>
