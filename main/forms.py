@@ -1,5 +1,5 @@
 from django import forms
-from .models import Market
+from .models import Market, Simulation
 
 class UploadFileForm(forms.Form):
     file = forms.FileField(label='File')
@@ -15,3 +15,12 @@ class MarketForm(forms.ModelForm):
             'market_number': forms.NumberInput(attrs={'class': 'form-control'}),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        academic_year = kwargs.pop('academic_year', None)
+        super().__init__(*args, **kwargs)
+
+        if academic_year:
+            self.fields['simulation'].queryset = Simulation.objects.filter(
+                academic_year=academic_year
+            )

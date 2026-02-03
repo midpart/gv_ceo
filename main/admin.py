@@ -89,6 +89,9 @@ class ImportFileLogAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
     
+    class Meta:
+        verbose_name_plural = "100. ImportFileLog"
+    
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
@@ -138,4 +141,21 @@ class Simulation2SurveyAdmin(admin.ModelAdmin):
     list_filter = ('simulation',)
 
     def has_add_permission(self, request):
-        return False   
+        return False    
+    
+@admin.register(Simulation3Survey)
+class Simulation3SurveyAdmin(admin.ModelAdmin):
+    def save_model(self, request, obj, form, change):
+        if not obj.pk:
+            obj.created_by = request.user
+        obj.modified_by = request.user
+        obj.modification_date_time = timezone.now()
+        return super().save_model(request, obj, form, change)
+    
+    list_display = ('id', 'student', 'simulation', 'sim3_day1', 'sim3_day2', 'sim3_day3', 'sim3_day4', 'sim3_day5'
+                    , 'creation_date_time', 'modification_date_time', 'created_by',  'modified_by')  
+    list_per_page = settings.PER_PAGE
+    list_filter = ('simulation',)
+
+    def has_add_permission(self, request):
+        return False 

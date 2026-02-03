@@ -42,6 +42,7 @@ def process_sheet(request):
             all_db_data = Student.objects.all()
             add_data = []
             update_data = []
+            academic_year = get_active_academic_year()
 
             for index, row in df.iterrows():
                 studienr = row.get('Studienr')
@@ -49,8 +50,6 @@ def process_sheet(request):
                 emailAdress = str_to_str(row.get('EmailAdress'))
                 campus = str_to_str(row.get('Campus'))
                 subscriptionKey = row.get('SubscriptionKey')
-                # marketMemberNum = row.get('MarketMemberNum')
-                # simulationNumber = row.get('SimulationNumber')
                 age = row.get('Age')
                 gender = str_to_str(row.get('Gender'))
                 
@@ -69,10 +68,9 @@ def process_sheet(request):
                 temp_student.name = name
                 temp_student.email_address = emailAdress
                 temp_student.campus = campus
-                # temp_student.market_member_num = str_to_bigint(marketMemberNum)
-                # temp_student.simulation_number = str_to_bigint(simulationNumber)
                 temp_student.age_in_year = str_to_bigint(age)
                 temp_student.gender = gender
+                temp_student.academic_year = academic_year
                 temp_student.modified_by = request.user
                 temp_student.modification_date_time = timezone.now()
         
@@ -92,10 +90,9 @@ def process_sheet(request):
                                                           , "name"
                                                           , "email_address"
                                                           , "campus"
-                                                        #   , "market_member_num"
-                                                        #   , "simulation_number"
                                                           , "age_in_year"
                                                           , "gender"
+                                                          , "academic_year"
                                                           , "modified_by"
                                                           , "modification_date_time"
                                                           ], batch_size=500)
@@ -113,41 +110,8 @@ def process_sheet(request):
 
 @login_required(login_url='login')
 def upload_student_file(request):
-    template_name = 'main/upload_student.html' 
+    template_name = 'main/upload_student.html'
+    academic_year = get_active_academic_year()
     form = UploadFileForm()
 
-    return render(request, template_name, {'form': form})
-
-    # Get your filtered data
-    rows = []
-    filters = get_filter(request)
-    rows = get_student_score_report(filters)
-
-    # Create workbook
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = f"Students_score_report"
-    file_name = f"Students_score_report_{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
-    # Add header
-    ws.append(["ID", "Studienr", "Name", "Age", "Gender", "EmailAddress", "Campus", "SubscriptionKey", "Player Id", "Company"
-               , "GoVenture Subscription Key | Simulation Number", "Rubric Score", "Balanced Score", "Participation Score"
-               , "Participation Score Info", "Rank Score", "HR Score", "Ethics Score", "Competency Quiz", "Team Evaluation"
-               , "Period joined", "Tutorial Quiz"])
-
-    # Add data
-    for row in rows:
-        #ws.append(row)
-        ws.append([row["id"], row["studienr"], row["name"], row["age"], row["gender"], row["email_address"], row["campus"], row["subscription_key"], row["player_id"], 
-                   row["company"], f"{row["go_venture_subscription_key"]} | #{row["go_venture_simulation_number"]}", row["rubric_score_percentage"], 
-                   row["balanced_score_percentage"], row["participation_percentage"], f"({row["participation_in"]} of {row["participation_total"]})"
-                   , row["rank_score_percentage"], row["hr_score_percentage"], row["ethics_score_percentage"], row["competency_quiz_percentage"], 
-                   row["team_evaluation_percentage"], row["period_joined"], row["tutorial_quiz_percentage"]])
-
-    # Prepare response
-    response = HttpResponse(
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-    response["Content-Disposition"] = f'attachment; filename="{file_name}.xlsx"'
-
-    wb.save(response)
-    return response
+    return render(request, template_name, {'form': form, 'academic_year': academic_year})

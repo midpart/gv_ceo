@@ -13,8 +13,6 @@ class Student(models.Model):
     email_address = models.CharField(max_length=255)
     campus = models.CharField(max_length=255)
     subscription_key = models.CharField(max_length=255, null=False, unique=True)
-    # market_member_num = models.IntegerField(null=False, default=0)
-    # simulation_number = models.BigIntegerField(null=True, blank=True)
     age_in_year = models.IntegerField(null=True, blank=True)
     gender = models.CharField(max_length=10, null=True, blank=True)
     academic_year = models.IntegerField(null=False, default=0)
@@ -27,6 +25,9 @@ class Student(models.Model):
     def __str__(self):
         return self.name
     
+    class Meta:
+        verbose_name_plural = "2. Student"
+    
 class Simulation(models.Model):
     name = models.CharField(max_length=1000, null=False, unique=True)
     number = models.IntegerField(null=False, default=0)
@@ -38,7 +39,10 @@ class Simulation(models.Model):
     modified_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='simulation_modified')
     
     def __str__(self):
-        return self.name 
+        return f"{self.name } -- {self.academic_year}"
+    
+    class Meta:
+        verbose_name_plural = "3. Simulation"
 
 class Market(models.Model):
     simulation = models.ForeignKey(Simulation, on_delete=models.RESTRICT, related_name='simulation', null=False)
@@ -55,6 +59,7 @@ class Market(models.Model):
     
     class Meta:
         ordering = ['name']
+        verbose_name_plural = "4. Market"
 
 class Team(models.Model):
     simulation = models.ForeignKey(Simulation, on_delete=models.RESTRICT, related_name='team_simulation', null=True)
@@ -72,6 +77,9 @@ class Team(models.Model):
 
     def __str__(self):
         return f"{self.teamID}"
+    
+    class Meta:
+        verbose_name_plural = "5. Team"
 
 class TeamMember(models.Model):
     team = models.ForeignKey(Team, on_delete=models.RESTRICT, related_name='team_team_member', null=False)
@@ -86,6 +94,9 @@ class TeamMember(models.Model):
 
     def __str__(self):
         return f"Student: {self.student.name}, Team: {self.team.name}"
+    
+    class Meta:
+        verbose_name_plural = "6. TeamMember"
     
 class StudentScore(models.Model):
     student = models.ForeignKey(Student, on_delete=models.RESTRICT, related_name='student_scores', null=False)
@@ -142,6 +153,7 @@ class StudentScore(models.Model):
             ),
              models.UniqueConstraint(fields=['student', 'market'], name='unique_student_market')
         ]
+        verbose_name_plural = "7. StudentScore"
 
 
 class ImportFileLog(models.Model):
@@ -278,6 +290,9 @@ class Simulation2Survey(models.Model):
     
     def __str__(self):
         return f"{self.student.name}, sim: {self.simulation.name}"
+    
+    class Meta:
+        verbose_name_plural = "8. Simulation2Survey"
 
 
 class Simulation3Survey(models.Model):
@@ -310,6 +325,9 @@ class Simulation3Survey(models.Model):
     
     def __str__(self):
         return f"{self.student.name}, sim: {self.simulation.name}"
+    
+    class Meta:
+        verbose_name_plural = "9. Simulation3Survey"
 
 class SystemSettings(models.Model):
     id = models.PositiveSmallIntegerField(
@@ -326,3 +344,6 @@ class SystemSettings(models.Model):
     
     def __str__(self):
         return f"{self.active_academic_year}"
+    
+    class Meta:
+        verbose_name_plural = "1. SystemSettings"

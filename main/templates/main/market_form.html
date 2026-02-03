@@ -4,7 +4,7 @@
 {% block content %}
 
 <div class="container mt-5">
-  <h2>{% if obj %}Edit{% else %}Add{% endif %} Market</h2>
+  <h2>{% if obj %}Edit{% else %}Add{% endif %} Market ({{academic_year}})</h2>
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}

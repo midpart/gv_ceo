@@ -26,11 +26,12 @@ def index(request):
     total_team = 0
     error_message = ''
     try:
-        total_student = Student.objects.count()
-        total_simulation = Simulation.objects.count()
-        total_market = Market.objects.count()
-        total_team = Team.objects.count()
         active_academic_year = get_active_academic_year()
+        if active_academic_year is not None:
+            total_student = Student.objects.filter(academic_year=active_academic_year).count()
+            total_simulation = Simulation.objects.filter(academic_year=active_academic_year).count()
+            total_market = Market.objects.filter(simulation__academic_year=active_academic_year).count()
+            total_team = Team.objects.filter(simulation__academic_year=active_academic_year).count()
 
     except Exception as e:
         error_message = str(e)

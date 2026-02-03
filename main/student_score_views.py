@@ -19,20 +19,24 @@ from django.http import HttpResponse
 
 @login_required(login_url='login')
 def upload_student_score_file(request):
+    academic_year = get_active_academic_year()
     template_name = 'main/upload_student_score.html' 
-    simulations = Simulation.objects.all()
+    simulations = Simulation.objects.filter(academic_year=academic_year).all()
 
-    return render(request, template_name, {'simulations': simulations})
+    return render(request, template_name, {'simulations': simulations, 'academic_year': academic_year})
 
 @csrf_exempt
 def get_markets(request):
     if request.method == "POST" and request.FILES.get("file"):
         uploaded_file = request.FILES["file"]
+        academic_year = get_active_academic_year()
         try:
             check_file(uploaded_file)
             file_name = uploaded_file.name
             simulation_id = request.POST.get('simulation_id')
             simulation_obj = get_object_or_404(Simulation, pk=simulation_id)
+            if simulation_obj.academic_year != academic_year:
+                raise ValueError (f"This simulation({simulation_obj.name}) is not for current academic year({academic_year}).")
             name_array = parse_file_name(file_name)
             market_number = None
             if name_array is not None and len(name_array) == 2:
@@ -80,9 +84,12 @@ def process_student_score_file(request):
                 raise ValueError (f"invalid team option")
 
             check_file(uploaded_file)
+            academic_year = get_active_academic_year()
             market_obj = Market.objects.filter(simulation_id = simulation_id , id = market_id).first()
             if market_obj is None:
                 raise ValueError (f"Unable to find Market with id : {market_id}")
+            if market_obj.simulation.academic_year != academic_year:
+                raise ValueError (f"This market({market_obj.name}) is not for current academic year({academic_year}).")
 
             filename = uploaded_file.name
             if uploaded_file.name.endswith('.csv'):
@@ -276,18 +283,19 @@ def student_score_report(request):
     campus_list = None
     market_list = None
     try:
+        academic_year = get_active_academic_year()
         per_page = request.GET.get("per_page", settings.PER_PAGE)
         simulation_ids = [int(i) for i in request.GET.getlist("simulation_ids", []) if i.isdigit()]
         market_ids = [int(i) for i in request.GET.getlist("market_ids", []) if i.isdigit()]
-        filters = get_filter(request)
-        simulation_list = Simulation.objects.all()
-        campus_list = get_all_campus()
+        filters = get_filter(request, academic_year)
+        simulation_list = Simulation.objects.filter(academic_year=academic_year).all()
+        campus_list = get_all_campus(academic_year)
         if simulation_ids and len(simulation_ids) > 0:
             market_list = Market.objects.filter(simulation_id__in=simulation_ids).all()
         elif market_ids:
-            market_list = Market.objects.all()
+            market_list = Market.objects.filter(simulation__academic_year=academic_year).all()
 
-        rows = get_student_score_report(filters)
+        rows = get_student_score_report(filters, academic_year)
         paginator = Paginator(rows, per_page)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -296,7 +304,7 @@ def student_score_report(request):
         error_message = e
     return render(request, template_name, {"page_obj": page_obj, "filters": filters
                                            , "total_rows": total_rows, "simulation_list": simulation_list, "market_list": market_list
-                                           , "error_message": error_message, "campus_list" : campus_list})
+                                           , "error_message": error_message, "campus_list" : campus_list, "academic_year": academic_year})
 
 @csrf_exempt
 def get_markets_list(request):
@@ -304,20 +312,21 @@ def get_markets_list(request):
     error_message = ""
     market_obj = []
     if request.method == "POST":
+        academic_year = get_active_academic_year()
         try:
             print(request.POST.getlist("simulation_ids", []))
             simulation_ids = [int(i) for i in request.POST.getlist("simulation_ids", []) if i.isdigit()]
             if len(simulation_ids) > 0:
-                market_obj = Market.objects.filter(simulation_id__in = simulation_ids).all()
+                market_obj = Market.objects.filter(simulation_id__in = simulation_ids, simulation__academic_year=academic_year).all()
             else:
-                market_obj = Market.objects.all()
+                market_obj = Market.objects.filter(simulation__academic_year=academic_year).all()
             market_obj = list(market_obj.values("id", "name"))
             is_success = True
         except Exception as e:
             error_message = str(e)
     return JsonResponse({"success": is_success, "error": error_message, "markets": list(market_obj)})
 
-def get_filter(request):
+def get_filter(request, academic_year):
     filters = {
             "report_type": request.GET.get("report_type", 1),
             "student_name": request.GET.get("student_name", "").strip(),
@@ -330,6 +339,7 @@ def get_filter(request):
             "age_from": request.GET.get("age_from", None),
             "age_to": request.GET.get("age_to", None),
             "per_page": request.GET.get("per_page", settings.PER_PAGE),
+            "academic_year": academic_year
         }
     return filters
 
@@ -340,7 +350,8 @@ def get_true_false(value):
 def student_score_report_xlx(request):
     # Get your filtered data
     rows = []
-    filters = get_filter(request)
+    academic_year = get_active_academic_year()
+    filters = get_filter(request, academic_year)
     rows = get_student_score_report(filters)
 
     # Create workbook
@@ -378,7 +389,8 @@ def student_score_report_xlx(request):
 def student_score_report_with_survey_xlx(request):
     # Get your filtered data
     rows = []
-    filters = get_filter(request)
+    academic_year = get_active_academic_year()
+    filters = get_filter(request, academic_year)
     rows = get_student_score_report(filters, True)
 
     # Create workbook

@@ -19,24 +19,26 @@ from django.http import HttpResponse
 @login_required(login_url='login')
 def manage_market(request):
     template_name = 'main/manage_market.html'
-    simulations = Market.objects.all().order_by('modification_date_time')
+    active_academic_year = get_active_academic_year()
+    simulations = Market.objects.filter(simulation__academic_year= active_academic_year).all().order_by('modification_date_time')
     paginator = Paginator(simulations, settings.PER_PAGE)
 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, template_name, {'page_obj': page_obj})
+    return render(request, template_name, {'page_obj': page_obj, 'academic_year': active_academic_year})
 
 @login_required(login_url='login')
 def market_form(request, pk=None):
     template_name = 'main/market_form.html'
+    academic_year = get_active_academic_year()
     if pk:
         obj = get_object_or_404(Market, pk=pk)
     else:
         obj = None
 
     if request.method == "POST":
-        form = MarketForm(request.POST, instance=obj)
+        form = MarketForm(request.POST, instance=obj, academic_year=academic_year)
         if form.is_valid():
             market = form.save(commit=False)
             if not market.pk:
@@ -47,9 +49,9 @@ def market_form(request, pk=None):
             market.save()
             return redirect('manageMarkets')  # redirect to list page
     else:
-        form = MarketForm(instance=obj)
+        form = MarketForm(instance=obj, academic_year=academic_year)
 
-    return render(request, template_name, {'form': form, 'obj': obj})
+    return render(request, template_name, {'form': form, 'obj': obj, 'academic_year': academic_year})
 
 @login_required(login_url='login')
 def delete_market(request, pk):

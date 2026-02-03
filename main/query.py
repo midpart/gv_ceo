@@ -168,6 +168,10 @@ LEFT JOIN main_simulation2survey sy ON sy.team_id = sc.team_id AND sy.student_id
     age_to = get_param_value(params_filter, "age_to")
     gender = get_param_value(params_filter, "gender")
     campus = get_param_value(params_filter, "campus")
+    academic_year = get_param_value(params_filter, "academic_year")
+
+    filter_query.append("AND stu.academic_year = %s")
+    params.append(academic_year)
 
     if market_id is not None and market_id.isdigit():
         filter_query.append("AND sc.market_id = %s")
@@ -335,8 +339,8 @@ def get_sql_debug(sql, params):
         sql_debug = sql_debug.replace("%s", str(p), 1)
     return sql_debug
 
-def get_all_campus():
-    sql = "SELECT ms.campus FROM main_student ms GROUP BY ms.campus ORDER BY campus;"
+def get_all_campus(academic_year):
+    sql = f"SELECT ms.campus FROM main_student ms WHERE ms.academic_year = {academic_year} GROUP BY ms.campus ORDER BY campus;"
     with connection.cursor() as cursor:
         #print(cursor.mogrify(sql, params))
         #print(get_sql_debug(sql, params))  # for debugging only
