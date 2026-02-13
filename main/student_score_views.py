@@ -85,7 +85,7 @@ def process_student_score_file(request):
 
             check_file(uploaded_file)
             academic_year = get_active_academic_year()
-            market_obj = Market.objects.filter(simulation_id = simulation_id , id = market_id).first()
+            market_obj = Market.objects.filter(simulation_id = simulation_id, simulation__academic_year = academic_year, id = market_id).first()
             if market_obj is None:
                 raise ValueError (f"Unable to find Market with id : {market_id}")
             if market_obj.simulation.academic_year != academic_year:
@@ -98,7 +98,7 @@ def process_student_score_file(request):
                 df = pd.read_excel(uploaded_file)
 
             row_count = len(df)
-            all_students = Student.objects.all()
+            all_students = Student.objects.filter(academic_year=academic_year).all()
             no_student_found_list = []
             no_team_found_list = []
             duplicate_student_found_list = []
@@ -358,9 +358,9 @@ def student_score_report_xlx(request):
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = f"Students_score_report"
-    file_name = f"Students_score_report_{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
+    file_name = f"Students_score_report__{academic_year}_{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
     # Add header
-    ws.append(["ID", "Studienr", "TeamID", "is_3pt", "is_mmf", "is_fix_alloc", "role", "Name", "Age", "Gender", "EmailAddress", "Campus", "SubscriptionKey", "Player Id", "Company"
+    ws.append(["ID", "academic_year", "Studienr", "TeamID", "is_3pt", "is_mmf", "is_fix_alloc", "role", "Name", "Age", "Gender", "EmailAddress", "Campus", "SubscriptionKey", "Player Id", "Company"
                , "GoVenture Subscription Key | Simulation Number", "Rubric Score", "Balanced Score", "Participation Score"
                , "Participation Score Info", "Rank Score", "HR Score", "Ethics Score", "Competency Quiz", "Team Evaluation"
                , "Period joined", "Tutorial Quiz"])
@@ -368,7 +368,7 @@ def student_score_report_xlx(request):
     # Add data
     for row in rows:
         #ws.append(row)
-        ws.append([row["id"], row["studienr"], row["teamID"], get_true_false(row["is_3pt"]), get_true_false(row["is_mmf"]), get_true_false(row["is_fix_alloc"])
+        ws.append([row["id"], row["academic_year"], row["studienr"], row["teamID"], get_true_false(row["is_3pt"]), get_true_false(row["is_mmf"]), get_true_false(row["is_fix_alloc"])
                    , row["role"], row["name"], row["age"], row["gender"], row["email_address"], row["campus"], row["subscription_key"], row["player_id"], 
                    row["company"], f"{row["go_venture_subscription_key"]} | #{row["go_venture_simulation_number"]}", row["rubric_score_percentage"], 
                    row["balanced_score_percentage"], row["participation_percentage"], f"({row["participation_in"]} of {row["participation_total"]})"
@@ -397,9 +397,9 @@ def student_score_report_with_survey_xlx(request):
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = f"Score_report_with_survey"
-    file_name = f"Score_report_with_survey_{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
+    file_name = f"Score_report__{academic_year}_with_survey_{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
     # Add header
-    ws.append(["ID", "Studienr", "TeamID", "is_3pt", "is_mmf", "is_fix_alloc", "role", "Name", "Age", "Gender", "EmailAddress", "Campus", "SubscriptionKey", "Player Id", "Company"
+    ws.append(["ID", "academic_year","Studienr", "TeamID", "is_3pt", "is_mmf", "is_fix_alloc", "role", "Name", "Age", "Gender", "EmailAddress", "Campus", "SubscriptionKey", "Player Id", "Company"
                , "GoVenture Subscription Key | Simulation Number", "Rubric Score", "Balanced Score", "Participation Score"
                , "Participation Score Info", "Rank Score", "HR Score", "Ethics Score", "Competency Quiz", "Team Evaluation"
                , "Period joined", "Tutorial Quiz", "sim2_complete", "indiv_time_spent", "indiv_time_spent_t", "joint_time_spent", "joint_time_spent_t", "days_in_person", "days_in_person_t", "responsib_clear", "responsib_clear_t"
@@ -416,7 +416,7 @@ def student_score_report_with_survey_xlx(request):
     # Add data
     for row in rows:
         #ws.append(row)
-        ws.append([row["id"], row["studienr"], row["teamID"], get_true_false(row["is_3pt"]), get_true_false(row["is_mmf"]), get_true_false(row["is_fix_alloc"])
+        ws.append([row["id"], row["academic_year"], row["studienr"], row["teamID"], get_true_false(row["is_3pt"]), get_true_false(row["is_mmf"]), get_true_false(row["is_fix_alloc"])
                    , row["role"], row["name"], row["age"], row["gender"], row["email_address"], row["campus"], row["subscription_key"], row["player_id"], 
                    row["company"], f"{row["go_venture_subscription_key"]} | #{row["go_venture_simulation_number"]}", row["rubric_score_percentage"], 
                    row["balanced_score_percentage"], row["participation_percentage"], f"({row["participation_in"]} of {row["participation_total"]})"

@@ -34,12 +34,12 @@ SELECT
 	, stu.name 
 	, stu.age_in_year AS age
 	, stu.gender
-    , stu.email_address 
+    , stu.email_address
+    , stu.academic_year 
 	, stu.campus 
 	, sc.go_venture_subscription_key 
 	, sc.simulation_number AS go_venture_simulation_number
 	, stu.subscription_key 
-	, stu.simulation_number 
     , sc.player_id 
     , sc.company
 	, sc.rubric_score_percentage 
@@ -279,6 +279,10 @@ INNER JOIN main_simulation s ON s.id = t.simulation_id
     is_fix_alloc = get_param_value(params_filter, "is_fix_alloc")
     is_mmf = get_param_value(params_filter, "is_mmf")
     campus = get_param_value(params_filter, "campus")
+    academic_year = get_param_value(params_filter, "academic_year")
+
+    filter_query.append("AND stu.academic_year = %s")
+    params.append(academic_year)
 
     if simulation_ids is not None and len(simulation_ids) > 0:
         selected_simulation_ids = [int(c) for c in simulation_ids if c.isdigit()]

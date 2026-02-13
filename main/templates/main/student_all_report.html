@@ -4,7 +4,7 @@
 {% block content %}
 
 <div class="container mt-5">
-    <h2 class="mb-4">All Data Report</h2>
+    <h2 class="mb-4">All Data Report ({{academic_year}})</h2>
     
     <div id="alert-container">
         {% if error_message %}
@@ -15,7 +15,7 @@
         {% endif %}
     </div>
 
-    <p>Total Data: {{ total_rows }} <a href="{% url 'allDataReportXlx' %}" class="btn btn-primary">Export</a></p>
+    <p>Total Data: {{ total_rows }} {% if total_rows > 0 %}<a href="{% url 'allDataReportXlx' %}" class="btn btn-primary">Export</a>{% endif %}</p>
     <!-- Table -->
     <div class="table-responsive">
         <table class="table table-bordered table-striped" id="marketTable">
@@ -27,11 +27,12 @@
                     <th>email_address</th>
                     <th>campus</th>
                     <th>subscription_key</th>
-                    <th>Age</th>
-                    <th>Gender</th>
+                    <th>age</th>
+                    <th>gender</th>
+                    <th>academic_year</th>
                     <th>cpl_data</th>
-                    <th>simulation_name</th>
-                    <th>simu_number</th>
+                    <th>sim_name</th>
+                    <th>sim_number</th>
                     <th>rank_score</th>
                 </tr>
             </thead>
@@ -46,6 +47,7 @@
                     <td>{{ obj.subscription_key }}</td>
                     <td>{{ obj.age_in_year }}</td>
                     <td>{{ obj.gender }}</td>
+                    <td>{{ obj.academic_year }}</td>
                     <td>{{ obj.cpl_data }}</td>
                     <td>{{ obj.simulation_name }}</td>
                     <td>{{ obj.sim_number }}</td>
@@ -53,7 +55,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="12" class="text-center">No item found.</td>
+                    <td colspan="13" class="text-center">No item found.</td>
                 </tr>
                 {% endfor %}
             </tbody>

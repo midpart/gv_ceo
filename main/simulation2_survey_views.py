@@ -20,10 +20,11 @@ import math
 
 @login_required(login_url='login')
 def upload_simulation2_survey_file(request):
+    academic_year = get_active_academic_year()
     template_name = 'main/upload_simulation2_survey.html' 
-    simulations = Simulation.objects.all()
+    simulations = Simulation.objects.filter(academic_year=academic_year).all()
 
-    return render(request, template_name, {'simulations': simulations})
+    return render(request, template_name, {'simulations': simulations, 'academic_year': academic_year})
 
 @csrf_exempt
 def process_simulation2_survey_file_sheet(request):
@@ -33,16 +34,17 @@ def process_simulation2_survey_file_sheet(request):
         simulation_id = request.POST.get("simulation_id")
         try:
             check_file(excel_file)
-            simulation_obj = Simulation.objects.filter(pk = simulation_id).first()
+            academic_year = get_active_academic_year()
+            simulation_obj = Simulation.objects.filter(pk = simulation_id, academic_year=academic_year).first()
             if simulation_obj is None:
                 raise ValueError(f"Unable to find simulation with id : {simulation_id}")
             df = pd.read_excel(excel_file, sheet_name=sheet_name)
             
             filename = excel_file.name
-            all_student_data = Student.objects.all()
-            all_survey_data = Simulation2Survey.objects.filter(simulation_id = simulation_obj.id).all()
-            all_team_member_data = TeamMember.objects.filter(team__simulation_id = simulation_obj.id).all()
-            all_team_data = Team.objects.filter(simulation_id = simulation_obj.id).all()
+            all_student_data = Student.objects.filter(academic_year=academic_year).all()
+            all_survey_data = Simulation2Survey.objects.filter(simulation_id = simulation_obj.id, simulation__academic_year=simulation_obj.academic_year).all()
+            all_team_member_data = TeamMember.objects.filter(team__simulation_id = simulation_obj.id, simulation__academic_year=simulation_obj.academic_year).all()
+            all_team_data = Team.objects.filter(simulation_id = simulation_obj.id, simulation__academic_year=simulation_obj.academic_year).all()
             all_survey_current_sheet = []
             no_student_found_list = []
             duplicate_student_found_list = []
@@ -392,8 +394,10 @@ def simulation2_survey_report(request):
     filters = {}
     campus_list = None
     market_list = None
+    academic_year = 0
     try:
         per_page = request.GET.get("per_page", settings.PER_PAGE)
+        academic_year = get_active_academic_year()
         filters = {
             "simulation_ids":  request.GET.getlist("simulation_ids", None),
             "student_name": request.GET.get("student_name", "").strip(),
@@ -403,9 +407,10 @@ def simulation2_survey_report(request):
             "is_mmf": request.GET.get("is_mmf", -1),
             "campus": request.GET.get("campus", ""), 
             "per_page": request.GET.get("per_page", settings.PER_PAGE),
+            "academic_year": academic_year,
         }
-        simulation_list = Simulation.objects.all()
-        campus_list = get_all_campus()
+        simulation_list = Simulation.objects.filter(academic_year=academic_year).all()
+        campus_list = get_all_campus(academic_year)
         rows = get_team_member_report(filters)
         paginator = Paginator(rows, per_page)
         page_number = request.GET.get('page')
@@ -415,4 +420,4 @@ def simulation2_survey_report(request):
         error_message = e
     return render(request, template_name, {"page_obj": page_obj, "filters": filters
                                            , "total_rows": total_rows, "simulation_list": simulation_list
-                                           , "error_message": error_message, "campus_list" : campus_list})
+                                           , "error_message": error_message, "campus_list" : campus_list, "academic_year": academic_year})

@@ -8,7 +8,7 @@
         <div class="col-md-6">
             <div class="card shadow-sm rounded-4">
                 <div class="card-body p-4">
-                    <h3 class="card-title text-center mb-4">📤 Upload CSV or Excel</h3>
+                    <h3 class="card-title text-center mb-4">📤 Upload Excel ({{academic_year}})</h3>
 
                     <div class="container mt-5">
                         <h3>Upload Excel File</h3>
@@ -21,12 +21,12 @@
                                 <select name="simulation_id" id="simulation_id" class="form-select" required>
                                     <option value="">-- Select Simulation --</option>
                                     {% for sim in simulations %}
-                                    <option value="{{ sim.id }}">{{ sim.name }}</option>
+                                    <option value="{{ sim.id }}">{{ sim.name }} - {{sim.academic_year}}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label for="file" class="form-label">Upload CSV/Excel File</label>
+                                <label for="file" class="form-label">Upload File</label>
                                 <input type="file" name="file" id="file" class="form-control" required>
                             </div>
                             <button type="submit" class="btn btn-primary w-100">Upload & Get Sheets</button>

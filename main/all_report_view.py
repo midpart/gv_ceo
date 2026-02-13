@@ -23,7 +23,9 @@ def student_all_report(request):
     rows = []
     total_rows = 0
     page_obj = None
+    academic_year = 0
     try:
+        academic_year = get_active_academic_year()
         per_page = request.GET.get("per_page", settings.PER_PAGE)
         
         rows = get_all_data()
@@ -33,18 +35,19 @@ def student_all_report(request):
         total_rows = paginator.count
     except Exception as e:
         error_message = e
-    return render(request, template_name, {"page_obj": page_obj, "total_rows": total_rows, "error_message": error_message})
+    return render(request, template_name, {"page_obj": page_obj, "total_rows": total_rows, "error_message": error_message, "academic_year": academic_year})
 
 def get_all_data():
     all_data = []
-    simulation_list = Simulation.objects.all()
-    student_list = Student.objects.all()
-    score_list = StudentScore.objects.all()
-    team_list = Team.objects.all()
-    team_member_lsit = TeamMember.objects.all()
-    market_list = Market.objects.all()
-    sim2_all = Simulation2Survey.objects.all()
-    sim3_all = Simulation3Survey.objects.all()
+    academic_year = get_active_academic_year()
+    simulation_list = Simulation.objects.filter(academic_year=academic_year).all()
+    student_list = Student.objects.filter(academic_year=academic_year).all()
+    score_list = StudentScore.objects.filter(market__simulation__academic_year=academic_year).all()
+    team_list = Team.objects.filter(simulation__academic_year=academic_year).all()
+    team_member_lsit = TeamMember.objects.filter(team__simulation__academic_year=academic_year).all()
+    market_list = Market.objects.filter(simulation__academic_year=academic_year).all()
+    sim2_all = Simulation2Survey.objects.filter(simulation__academic_year=academic_year).all()
+    sim3_all = Simulation3Survey.objects.filter(simulation__academic_year=academic_year).all()
     simulation_ids = [sim.id for sim in simulation_list]
     student_sim_counts = []
     if len(simulation_ids) > 0:
@@ -68,11 +71,15 @@ def get_all_data():
                 subscription_key = stu.subscription_key,
                 age_in_year = stu.age_in_year,
                 gender = stu.gender,
+                academic_year=stu.academic_year,
                 simulation_name = sim.name,
                 sim_number= sim.number,
             )
             temp_score = score_lookup.get((stu.id, sim.id))
             all_sim_data = all_sim_lookup.get((stu.id))
+            temp_sim2 = sim2_lookup.get((stu.id, sim.id))
+            temp_sim3 = sim3_lookup.get((stu.id, sim.id))
+
             temp_dto.cpl_data = False
             if all_sim_data is not None and all_sim_data["total_sim_count"] == len(simulation_ids):
                 temp_dto.cpl_data = True
@@ -80,8 +87,6 @@ def get_all_data():
                 temp_market = market_lookup.get(temp_score.market_id)
                 temp_team = None
                 temp_team_member = None
-                temp_sim2 = sim2_lookup.get((stu.id, sim.id))
-                temp_sim3 = sim3_lookup.get((stu.id, sim.id))
                 if temp_score.team is not None:
                     temp_team = team_lookup.get(temp_score.team_id)
                     temp_team_member = team_member_lookup.get((stu.id, temp_score.team_id))
@@ -112,97 +117,97 @@ def get_all_data():
                 temp_dto.period_joined = temp_score.period_joined
                 temp_dto.tutorial_quiz_percentage = temp_score.tutorial_quiz_percentage
 
-                if temp_sim2 is not None:
-                    temp_dto.indiv_time_spent = temp_sim2.indiv_time_spent
-                    temp_dto.indiv_time_spent_t = temp_sim2.indiv_time_spent_t
-                    temp_dto.joint_time_spent = temp_sim2.joint_time_spent
-                    temp_dto.joint_time_spent_t = temp_sim2.joint_time_spent_t
-                    temp_dto.days_in_person = temp_sim2.days_in_person
-                    temp_dto.days_in_person_t = temp_sim2.days_in_person_t
-                    temp_dto.responsib_clear = temp_sim2.responsib_clear
-                    temp_dto.responsib_clear_t = temp_sim2.responsib_clear_t
-                    temp_dto.responsib_own = temp_sim2.responsib_own
-                    temp_dto.responsib_own_t = temp_sim2.responsib_own_t
-                    temp_dto.responsib_change = temp_sim2.responsib_change
-                    temp_dto.responsib_change_t = temp_sim2.responsib_change_t
-                    temp_dto.areas_change_1 = temp_sim2.areas_change_1
-                    temp_dto.areas_change_2 = temp_sim2.areas_change_2
-                    temp_dto.areas_change_3 = temp_sim2.areas_change_3
-                    temp_dto.areas_change_4 = temp_sim2.areas_change_4
-                    temp_dto.areas_change_indiv = temp_sim2.areas_change_indiv
-                    temp_dto.areas_change_team = temp_sim2.areas_change_team
-                    temp_dto.responsib_outside = temp_sim2.responsib_outside
-                    temp_dto.responsib_outside_t = temp_sim2.responsib_outside_t
-                    temp_dto.ta_a = temp_sim2.ta_a
-                    temp_dto.ta_b = temp_sim2.ta_b
-                    temp_dto.ta_c = temp_sim2.ta_c
-                    temp_dto.ta_indiv = temp_sim2.ta_indiv
-                    temp_dto.ta_team = temp_sim2.ta_team
-                    temp_dto.la_a = temp_sim2.la_a
-                    temp_dto.la_b = temp_sim2.la_b
-                    temp_dto.la_c = temp_sim2.la_c
-                    temp_dto.la_indiv = temp_sim2.la_indiv
-                    temp_dto.la_team = temp_sim2.la_team
-                    temp_dto.tms_s1 = temp_sim2.tms_s1
-                    temp_dto.tms_s2 = temp_sim2.tms_s2
-                    temp_dto.tms_s3 = temp_sim2.tms_s3
-                    temp_dto.tms_s4 = temp_sim2.tms_s4
-                    temp_dto.tms_s5 = temp_sim2.tms_s5
-                    temp_dto.tms_spec_indiv = temp_sim2.tms_spec_indiv
-                    temp_dto.tms_spec_team = temp_sim2.tms_spec_team
-                    temp_dto.tms_cred1 = temp_sim2.tms_cred1
-                    temp_dto.tms_cred2 = temp_sim2.tms_cred2
-                    temp_dto.tms_cred3 = temp_sim2.tms_cred3
-                    temp_dto.tms_cred4 = temp_sim2.tms_cred4
-                    temp_dto.tms_cred5 = temp_sim2.tms_cred5
-                    temp_dto.tms_cred_indiv = temp_sim2.tms_cred_indiv
-                    temp_dto.tms_cred_team = temp_sim2.tms_cred_team
-                    temp_dto.tms_co1 = temp_sim2.tms_co1
-                    temp_dto.tms_co2 = temp_sim2.tms_co2
-                    temp_dto.tms_co3 = temp_sim2.tms_co3
-                    temp_dto.tms_co4 = temp_sim2.tms_co4
-                    temp_dto.tms_co5 = temp_sim2.tms_co5
-                    temp_dto.tms_coord_indiv = temp_sim2.tms_coord_indiv
-                    temp_dto.tms_coord_team = temp_sim2.tms_coord_team
-                    temp_dto.att_market_sales = temp_sim2.att_market_sales
-                    temp_dto.att_production = temp_sim2.att_production
-                    temp_dto.att_randd = temp_sim2.att_randd
-                    temp_dto.focus_shift_1 = temp_sim2.focus_shift_1
-                    temp_dto.focus_shift_2 = temp_sim2.focus_shift_2
-                    temp_dto.focus_shift_3 = temp_sim2.focus_shift_3
-                    temp_dto.focus_shift_4 = temp_sim2.focus_shift_4
-                    temp_dto.focus_shift_indiv = temp_sim2.focus_shift_indiv
-                    temp_dto.focus_shift_team = temp_sim2.focus_shift_team
-                    temp_dto.compet_import1 = temp_sim2.compet_import1
-                    temp_dto.compet_import2 = temp_sim2.compet_import2
-                    temp_dto.compet_import3 = temp_sim2.compet_import3
-                    temp_dto.compet_import_indiv = temp_sim2.compet_import_indiv
-                    temp_dto.compet_import_team = temp_sim2.compet_import_team
-                    temp_dto.pcs_1 = temp_sim2.pcs_1
-                    temp_dto.pcs_2 = temp_sim2.pcs_2
-                    temp_dto.pcs_3 = temp_sim2.pcs_3
-                    temp_dto.pcs_indiv = temp_sim2.pcs_indiv
-                    temp_dto.pcs_team = temp_sim2.pcs_team
-                    temp_dto.statoverall_1 = temp_sim2.statoverall_1
-                    temp_dto.statoverall_2 = temp_sim2.statoverall_2
-                    temp_dto.statoverall_3 = temp_sim2.statoverall_3
-                    temp_dto.statoverall_4 = temp_sim2.statoverall_4
-                    temp_dto.statoverall_5 = temp_sim2.statoverall_5
-                    temp_dto.team_size = temp_sim2.team_size
-                    temp_dto.team_size_found = temp_sim2.team_size_found
-                    temp_dto.comments = temp_sim2.comments
+            if temp_sim2 is not None:
+                temp_dto.indiv_time_spent = temp_sim2.indiv_time_spent
+                temp_dto.indiv_time_spent_t = temp_sim2.indiv_time_spent_t
+                temp_dto.joint_time_spent = temp_sim2.joint_time_spent
+                temp_dto.joint_time_spent_t = temp_sim2.joint_time_spent_t
+                temp_dto.days_in_person = temp_sim2.days_in_person
+                temp_dto.days_in_person_t = temp_sim2.days_in_person_t
+                temp_dto.responsib_clear = temp_sim2.responsib_clear
+                temp_dto.responsib_clear_t = temp_sim2.responsib_clear_t
+                temp_dto.responsib_own = temp_sim2.responsib_own
+                temp_dto.responsib_own_t = temp_sim2.responsib_own_t
+                temp_dto.responsib_change = temp_sim2.responsib_change
+                temp_dto.responsib_change_t = temp_sim2.responsib_change_t
+                temp_dto.areas_change_1 = temp_sim2.areas_change_1
+                temp_dto.areas_change_2 = temp_sim2.areas_change_2
+                temp_dto.areas_change_3 = temp_sim2.areas_change_3
+                temp_dto.areas_change_4 = temp_sim2.areas_change_4
+                temp_dto.areas_change_indiv = temp_sim2.areas_change_indiv
+                temp_dto.areas_change_team = temp_sim2.areas_change_team
+                temp_dto.responsib_outside = temp_sim2.responsib_outside
+                temp_dto.responsib_outside_t = temp_sim2.responsib_outside_t
+                temp_dto.ta_a = temp_sim2.ta_a
+                temp_dto.ta_b = temp_sim2.ta_b
+                temp_dto.ta_c = temp_sim2.ta_c
+                temp_dto.ta_indiv = temp_sim2.ta_indiv
+                temp_dto.ta_team = temp_sim2.ta_team
+                temp_dto.la_a = temp_sim2.la_a
+                temp_dto.la_b = temp_sim2.la_b
+                temp_dto.la_c = temp_sim2.la_c
+                temp_dto.la_indiv = temp_sim2.la_indiv
+                temp_dto.la_team = temp_sim2.la_team
+                temp_dto.tms_s1 = temp_sim2.tms_s1
+                temp_dto.tms_s2 = temp_sim2.tms_s2
+                temp_dto.tms_s3 = temp_sim2.tms_s3
+                temp_dto.tms_s4 = temp_sim2.tms_s4
+                temp_dto.tms_s5 = temp_sim2.tms_s5
+                temp_dto.tms_spec_indiv = temp_sim2.tms_spec_indiv
+                temp_dto.tms_spec_team = temp_sim2.tms_spec_team
+                temp_dto.tms_cred1 = temp_sim2.tms_cred1
+                temp_dto.tms_cred2 = temp_sim2.tms_cred2
+                temp_dto.tms_cred3 = temp_sim2.tms_cred3
+                temp_dto.tms_cred4 = temp_sim2.tms_cred4
+                temp_dto.tms_cred5 = temp_sim2.tms_cred5
+                temp_dto.tms_cred_indiv = temp_sim2.tms_cred_indiv
+                temp_dto.tms_cred_team = temp_sim2.tms_cred_team
+                temp_dto.tms_co1 = temp_sim2.tms_co1
+                temp_dto.tms_co2 = temp_sim2.tms_co2
+                temp_dto.tms_co3 = temp_sim2.tms_co3
+                temp_dto.tms_co4 = temp_sim2.tms_co4
+                temp_dto.tms_co5 = temp_sim2.tms_co5
+                temp_dto.tms_coord_indiv = temp_sim2.tms_coord_indiv
+                temp_dto.tms_coord_team = temp_sim2.tms_coord_team
+                temp_dto.att_market_sales = temp_sim2.att_market_sales
+                temp_dto.att_production = temp_sim2.att_production
+                temp_dto.att_randd = temp_sim2.att_randd
+                temp_dto.focus_shift_1 = temp_sim2.focus_shift_1
+                temp_dto.focus_shift_2 = temp_sim2.focus_shift_2
+                temp_dto.focus_shift_3 = temp_sim2.focus_shift_3
+                temp_dto.focus_shift_4 = temp_sim2.focus_shift_4
+                temp_dto.focus_shift_indiv = temp_sim2.focus_shift_indiv
+                temp_dto.focus_shift_team = temp_sim2.focus_shift_team
+                temp_dto.compet_import1 = temp_sim2.compet_import1
+                temp_dto.compet_import2 = temp_sim2.compet_import2
+                temp_dto.compet_import3 = temp_sim2.compet_import3
+                temp_dto.compet_import_indiv = temp_sim2.compet_import_indiv
+                temp_dto.compet_import_team = temp_sim2.compet_import_team
+                temp_dto.pcs_1 = temp_sim2.pcs_1
+                temp_dto.pcs_2 = temp_sim2.pcs_2
+                temp_dto.pcs_3 = temp_sim2.pcs_3
+                temp_dto.pcs_indiv = temp_sim2.pcs_indiv
+                temp_dto.pcs_team = temp_sim2.pcs_team
+                temp_dto.statoverall_1 = temp_sim2.statoverall_1
+                temp_dto.statoverall_2 = temp_sim2.statoverall_2
+                temp_dto.statoverall_3 = temp_sim2.statoverall_3
+                temp_dto.statoverall_4 = temp_sim2.statoverall_4
+                temp_dto.statoverall_5 = temp_sim2.statoverall_5
+                temp_dto.team_size = temp_sim2.team_size
+                temp_dto.team_size_found = temp_sim2.team_size_found
+                temp_dto.comments = temp_sim2.comments
 
-                if temp_sim3 is not None:
-                    temp_dto.sim3_day1 = temp_sim3.sim3_day1
-                    temp_dto.sim3_day2 = temp_sim3.sim3_day2
-                    temp_dto.sim3_day3 = temp_sim3.sim3_day3
-                    temp_dto.sim3_day4 = temp_sim3.sim3_day4
-                    temp_dto.sim3_day5 = temp_sim3.sim3_day5
-                    temp_dto.sim3_statoverall_1 = temp_sim3.statoverall_1
-                    temp_dto.sim3_statoverall_2 = temp_sim3.statoverall_2
-                    temp_dto.sim3_statoverall_3 = temp_sim3.statoverall_3
-                    temp_dto.sim3_statoverall_4 = temp_sim3.statoverall_4
-                    temp_dto.sim3_statoverall_5 = temp_sim3.statoverall_5
+            if temp_sim3 is not None:
+                temp_dto.sim3_day1 = temp_sim3.sim3_day1
+                temp_dto.sim3_day2 = temp_sim3.sim3_day2
+                temp_dto.sim3_day3 = temp_sim3.sim3_day3
+                temp_dto.sim3_day4 = temp_sim3.sim3_day4
+                temp_dto.sim3_day5 = temp_sim3.sim3_day5
+                temp_dto.sim3_statoverall_1 = temp_sim3.statoverall_1
+                temp_dto.sim3_statoverall_2 = temp_sim3.statoverall_2
+                temp_dto.sim3_statoverall_3 = temp_sim3.statoverall_3
+                temp_dto.sim3_statoverall_4 = temp_sim3.statoverall_4
+                temp_dto.sim3_statoverall_5 = temp_sim3.statoverall_5
 
             all_data.append(temp_dto)
 
@@ -211,15 +216,16 @@ def get_all_data():
 @login_required(login_url='login')
 def student_all_report_xlx(request):
     # Get your filtered data
+    academic_year = get_active_academic_year()
     rows = get_all_data()
 
     # Create workbook
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = f"All_data"
-    file_name = f"Students_All_data_report{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
+    file_name = f"Students_All_data_report__{academic_year}__{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
     # Add header
-    ws.append(["Studienr", "name", "email", "campus", "subscription_key", "age", "gender", "cpl_data", "sim", "sim_number", "market", "market_number"
+    ws.append(["Studienr", "name", "email", "campus", "subscription_key", "age", "gender", "academic_year", "cpl_data", "sim", "sim_number", "market", "market_number"
                , "team_name", "teamID", "is_mmf", "is_3pt", "is_fix_alloc", "role", "teammember_order"
                
                , "player_id", "company", "rubric_score", "balanced_score", "participation", "participation_total", "participation_in", "rank_score", "hr_score"
@@ -242,7 +248,7 @@ def student_all_report_xlx(request):
     # Add data
     for row in rows:
         #ws.append(row)
-        ws.append([row.studienr, row.student_name, row.email_address, row.campus, row.subscription_key, row.age_in_year, row.gender, get_true_false(row.cpl_data)
+        ws.append([row.studienr, row.student_name, row.email_address, row.campus, row.subscription_key, row.age_in_year, row.gender, row.academic_year, get_true_false(row.cpl_data)
                   , row.simulation_name, row.sim_number, row.market_name, row.market_number
                   , row.team_name, row.teamID, get_true_false(row.is_mmf), get_true_false(row.is_3pt), get_true_false(row.is_fix_alloc), row.role, row.teammember_order
                   

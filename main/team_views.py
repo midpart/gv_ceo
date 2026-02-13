@@ -18,10 +18,11 @@ from django.http import HttpResponse
 
 @login_required(login_url='login')
 def upload_team_file(request):
+    academic_year = get_active_academic_year()
     template_name = 'main/upload_team.html' 
-    simulations = Simulation.objects.all()
+    simulations = Simulation.objects.filter(academic_year=academic_year).all()
 
-    return render(request, template_name, {'simulations': simulations})
+    return render(request, template_name, {'simulations': simulations, "academic_year": academic_year})
 
 def get_team_member(all_old_members, team, player, user, role, order):
     temp_data = next((t for t in all_old_members if t.student_id == player.id), None) if len(all_old_members) > 0 else None
@@ -50,14 +51,15 @@ def process_team_file_sheet(request):
         simulation_id = request.POST.get("simulation_id")
         try:
             check_file(excel_file)
-            simulation_obj = Simulation.objects.filter(pk = simulation_id).first()
+            academic_year = get_active_academic_year()
+            simulation_obj = Simulation.objects.filter(pk = simulation_id, academic_year=academic_year).first()
             if simulation_obj is None:
                 raise ValueError(f"Unable to find simulation with id : {simulation_id}")
             df = pd.read_excel(excel_file, sheet_name=sheet_name)
             
             filename = excel_file.name
-            all_student_data = Student.objects.all()
-            all_team_data = Team.objects.filter(simulation_id = simulation_id).all()
+            all_student_data = Student.objects.filter(academic_year=academic_year).all()
+            all_team_data = Team.objects.filter(simulation_id = simulation_id, simulation__academic_year=academic_year).all()
             all_team_current_sheet = []
             add_team_data = []
             update_team_data = []
@@ -249,6 +251,7 @@ def team_member_report(request):
     market_list = None
     try:
         per_page = request.GET.get("per_page", settings.PER_PAGE)
+        academic_year = get_active_academic_year()
         filters = {
             "simulation_ids":  request.GET.getlist("simulation_ids", None),
             "student_name": request.GET.get("student_name", "").strip(),
@@ -258,9 +261,10 @@ def team_member_report(request):
             "is_mmf": request.GET.get("is_mmf", -1),
             "campus": request.GET.get("campus", ""), 
             "per_page": request.GET.get("per_page", settings.PER_PAGE),
+            "academic_year": academic_year,
         }
-        simulation_list = Simulation.objects.all()
-        campus_list = get_all_campus()
+        simulation_list = Simulation.objects.filter(academic_year=academic_year).all()
+        campus_list = get_all_campus(academic_year)
         rows = get_team_member_report(filters)
         paginator = Paginator(rows, per_page)
         page_number = request.GET.get('page')
@@ -270,4 +274,4 @@ def team_member_report(request):
         error_message = e
     return render(request, template_name, {"page_obj": page_obj, "filters": filters
                                            , "total_rows": total_rows, "simulation_list": simulation_list
-                                           , "error_message": error_message, "campus_list" : campus_list})
+                                           , "error_message": error_message, "campus_list" : campus_list, "academic_year": academic_year})
