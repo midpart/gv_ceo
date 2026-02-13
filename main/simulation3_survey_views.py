@@ -19,10 +19,11 @@ import math
 
 @login_required(login_url='login')
 def upload_simulation3_survey_file(request):
+    academic_year = get_active_academic_year()
     template_name = 'main/upload_simulation3_survey.html' 
-    simulations = Simulation.objects.all()
+    simulations = Simulation.objects.filter(academic_year=academic_year).all()
 
-    return render(request, template_name, {'simulations': simulations})
+    return render(request, template_name, {'simulations': simulations, 'academic_year': academic_year})
 
 @csrf_exempt
 def process_simulation3_survey_file_sheet(request):
@@ -32,14 +33,15 @@ def process_simulation3_survey_file_sheet(request):
         simulation_id = request.POST.get("simulation_id")
         try:
             check_file(excel_file)
-            simulation_obj = Simulation.objects.filter(pk = simulation_id).first()
+            academic_year = get_active_academic_year()
+            simulation_obj = Simulation.objects.filter(pk = simulation_id, academic_year=academic_year).first()
             if simulation_obj is None:
                 raise ValueError(f"Unable to find simulation with id : {simulation_id}")
             df = pd.read_excel(excel_file, sheet_name=sheet_name)
             
             filename = excel_file.name
-            all_student_data = Student.objects.all()
-            all_survey_data = Simulation3Survey.objects.filter(simulation_id = simulation_obj.id).all()
+            all_student_data = Student.objects.filter(academic_year=academic_year).all()
+            all_survey_data = Simulation3Survey.objects.filter(simulation_id = simulation_obj.id, simulation__academic_year=academic_year).all()
             all_survey_current_sheet = []
             no_student_found_list = []
             duplicate_student_found_list = []
