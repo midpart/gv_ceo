@@ -25,8 +25,8 @@ class Student(models.Model):
     def __str__(self):
         return self.name
     
-    # class Meta:
-    #     verbose_name_plural = "2. Student"
+    class Meta:
+        verbose_name_plural = "2. Student"
     
 class Simulation(models.Model):
     name = models.CharField(max_length=1000, null=False, unique=True)
