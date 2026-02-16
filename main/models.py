@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-# from django.db.models import Q
+from django.db.models import Q
 
 User = get_user_model()
 # Create your models here.
