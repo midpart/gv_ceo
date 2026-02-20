@@ -33,6 +33,7 @@ SELECT
     , stu.studienr 
 	, stu.name 
 	, stu.age_in_year AS age
+	, stu.exam_grade
 	, stu.gender
     , stu.email_address
     , stu.academic_year 
@@ -262,6 +263,7 @@ SELECT
 	, stu.name as student_name
 	, stu.gender 
 	, stu.age_in_year as age
+	, stu.exam_grade
     , stu.campus
 	, s.name as simulation_name
 FROM main_teammember tm 

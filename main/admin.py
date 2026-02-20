@@ -25,7 +25,7 @@ class SystemSettings(admin.ModelAdmin):
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'studienr', 'name', 'age_in_year', 'gender', 'academic_year','email_address'
+    list_display = ('id', 'studienr', 'name', 'age_in_year', 'gender', 'academic_year', 'exam_grade','email_address'
                     , 'campus', 'subscription_key', 'creation_date_time', 'created_by')  
     search_fields = ('name', 'studienr', 'subscription_key', 'age_in_year', 'academic_year')
     list_filter = ('campus', 'gender','academic_year',)

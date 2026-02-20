@@ -360,7 +360,7 @@ def student_score_report_xlx(request):
     ws.title = f"Students_score_report"
     file_name = f"Students_score_report__{academic_year}_{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
     # Add header
-    ws.append(["ID", "academic_year", "Studienr", "TeamID", "is_3pt", "is_mmf", "is_fix_alloc", "role", "Name", "Age", "Gender", "EmailAddress", "Campus", "SubscriptionKey", "Player Id", "Company"
+    ws.append(["ID", "academic_year", "Studienr", "TeamID", "is_3pt", "is_mmf", "is_fix_alloc", "role", "Name", "Age", "Gender", "EmailAddress", "Campus", "exam_grade", "SubscriptionKey", "Player Id", "Company"
                , "GoVenture Subscription Key | Simulation Number", "Rubric Score", "Balanced Score", "Participation Score"
                , "Participation Score Info", "Rank Score", "HR Score", "Ethics Score", "Competency Quiz", "Team Evaluation"
                , "Period joined", "Tutorial Quiz"])
@@ -369,7 +369,7 @@ def student_score_report_xlx(request):
     for row in rows:
         #ws.append(row)
         ws.append([row["id"], row["academic_year"], row["studienr"], row["teamID"], get_true_false(row["is_3pt"]), get_true_false(row["is_mmf"]), get_true_false(row["is_fix_alloc"])
-                   , row["role"], row["name"], row["age"], row["gender"], row["email_address"], row["campus"], row["subscription_key"], row["player_id"], 
+                   , row["role"], row["name"], row["age"], row["gender"], row["email_address"], row["campus"], row["exam_grade"], row["subscription_key"], row["player_id"], 
                    row["company"], f"{row["go_venture_subscription_key"]} | #{row["go_venture_simulation_number"]}", row["rubric_score_percentage"], 
                    row["balanced_score_percentage"], row["participation_percentage"], f"({row["participation_in"]} of {row["participation_total"]})"
                    , row["rank_score_percentage"], row["hr_score_percentage"], row["ethics_score_percentage"], row["competency_quiz_percentage"], 
@@ -399,7 +399,7 @@ def student_score_report_with_survey_xlx(request):
     ws.title = f"Score_report_with_survey"
     file_name = f"Score_report__{academic_year}_with_survey_{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
     # Add header
-    ws.append(["ID", "academic_year","Studienr", "TeamID", "is_3pt", "is_mmf", "is_fix_alloc", "role", "Name", "Age", "Gender", "EmailAddress", "Campus", "SubscriptionKey", "Player Id", "Company"
+    ws.append(["ID", "academic_year","Studienr", "TeamID", "is_3pt", "is_mmf", "is_fix_alloc", "role", "Name", "Age", "Gender", "EmailAddress", "Campus", "exam_grade", "SubscriptionKey", "Player Id", "Company"
                , "GoVenture Subscription Key | Simulation Number", "Rubric Score", "Balanced Score", "Participation Score"
                , "Participation Score Info", "Rank Score", "HR Score", "Ethics Score", "Competency Quiz", "Team Evaluation"
                , "Period joined", "Tutorial Quiz", "sim2_complete", "indiv_time_spent", "indiv_time_spent_t", "joint_time_spent", "joint_time_spent_t", "days_in_person", "days_in_person_t", "responsib_clear", "responsib_clear_t"
@@ -417,7 +417,7 @@ def student_score_report_with_survey_xlx(request):
     for row in rows:
         #ws.append(row)
         ws.append([row["id"], row["academic_year"], row["studienr"], row["teamID"], get_true_false(row["is_3pt"]), get_true_false(row["is_mmf"]), get_true_false(row["is_fix_alloc"])
-                   , row["role"], row["name"], row["age"], row["gender"], row["email_address"], row["campus"], row["subscription_key"], row["player_id"], 
+                   , row["role"], row["name"], row["age"], row["gender"], row["email_address"], row["campus"], row["exam_grade"], row["subscription_key"], row["player_id"], 
                    row["company"], f"{row["go_venture_subscription_key"]} | #{row["go_venture_simulation_number"]}", row["rubric_score_percentage"], 
                    row["balanced_score_percentage"], row["participation_percentage"], f"({row["participation_in"]} of {row["participation_total"]})"
                    , row["rank_score_percentage"], row["hr_score_percentage"], row["ethics_score_percentage"], row["competency_quiz_percentage"], 

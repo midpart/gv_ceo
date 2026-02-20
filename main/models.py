@@ -16,6 +16,7 @@ class Student(models.Model):
     age_in_year = models.IntegerField(null=True, blank=True)
     gender = models.CharField(max_length=10, null=True, blank=True)
     academic_year = models.IntegerField(null=False, default=0)
+    exam_grade = models.IntegerField(null=True, blank=True)
 
     creation_date_time = models.DateTimeField(auto_now_add=True)
     modification_date_time = models.DateTimeField(default=timezone.now)

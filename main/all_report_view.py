@@ -70,6 +70,7 @@ def get_all_data():
                 campus = stu.campus,
                 subscription_key = stu.subscription_key,
                 age_in_year = stu.age_in_year,
+                exam_grade = stu.exam_grade,
                 gender = stu.gender,
                 academic_year=stu.academic_year,
                 simulation_name = sim.name,
@@ -225,7 +226,7 @@ def student_all_report_xlx(request):
     ws.title = f"All_data"
     file_name = f"Students_All_data_report__{academic_year}__{timezone.now().strftime("%Y-%m-%d-%H-%M-%S")}"
     # Add header
-    ws.append(["Studienr", "name", "email", "campus", "subscription_key", "age", "gender", "academic_year", "cpl_data", "sim", "sim_number", "market", "market_number"
+    ws.append(["Studienr", "name", "email", "campus", "subscription_key", "age", "gender", "exam_grade", "academic_year", "cpl_data", "sim", "sim_number", "market", "market_number"
                , "team_name", "teamID", "is_mmf", "is_3pt", "is_fix_alloc", "role", "teammember_order"
                
                , "player_id", "company", "rubric_score", "balanced_score", "participation", "participation_total", "participation_in", "rank_score", "hr_score"
@@ -248,7 +249,7 @@ def student_all_report_xlx(request):
     # Add data
     for row in rows:
         #ws.append(row)
-        ws.append([row.studienr, row.student_name, row.email_address, row.campus, row.subscription_key, row.age_in_year, row.gender, row.academic_year, get_true_false(row.cpl_data)
+        ws.append([row.studienr, row.student_name, row.email_address, row.campus, row.subscription_key, row.age_in_year, row.gender, row.exam_grade, row.academic_year, get_true_false(row.cpl_data)
                   , row.simulation_name, row.sim_number, row.market_name, row.market_number
                   , row.team_name, row.teamID, get_true_false(row.is_mmf), get_true_false(row.is_3pt), get_true_false(row.is_fix_alloc), row.role, row.teammember_order
                   

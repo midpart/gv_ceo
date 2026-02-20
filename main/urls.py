@@ -10,6 +10,9 @@ urlpatterns = [
     path('get_sheet_names/', student_views.get_sheet_names, name='getSheetNames'),
     path('process_sheet/', student_views.process_sheet, name='processSheet'),
     path('upload_student_file/', student_views.upload_student_file, name='uploadStudentFile'),
+
+    path('process_exam_grade_sheet/', student_views.process_exam_grade_sheet, name='processExamGradeSheet'),
+    path('upload_student_exam_grade_file/', student_views.upload_student_exam_grade_file, name='uploadStudentExamGradeFile'),
     
     path('manage_market/', market_views.manage_market, name='manageMarkets'),
     path('market/add/', market_views.market_form, name='marketAdd'),

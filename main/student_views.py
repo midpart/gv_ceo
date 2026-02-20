@@ -38,11 +38,11 @@ def process_sheet(request):
             check_file(excel_file)
             df = pd.read_excel(excel_file, sheet_name=sheet_name)
             
+            academic_year = get_active_academic_year()
             filename = excel_file.name
-            all_db_data = Student.objects.all()
+            all_db_data = Student.objects.filter(academic_year=academic_year).all()
             add_data = []
             update_data = []
-            academic_year = get_active_academic_year()
 
             for index, row in df.iterrows():
                 studienr = row.get('Studienr')
@@ -111,6 +111,67 @@ def process_sheet(request):
 @login_required(login_url='login')
 def upload_student_file(request):
     template_name = 'main/upload_student.html'
+    academic_year = get_active_academic_year()
+    form = UploadFileForm()
+
+    return render(request, template_name, {'form': form, 'academic_year': academic_year})
+
+
+@csrf_exempt
+def process_exam_grade_sheet(request):
+    if request.method == "POST" and request.FILES.get("file"):
+        excel_file = request.FILES["file"]
+        sheet_name = request.POST.get("sheet_name")
+        try:
+            check_file(excel_file)
+            df = pd.read_excel(excel_file, sheet_name=sheet_name)
+            
+            academic_year = get_active_academic_year()
+            filename = excel_file.name
+            all_db_data = Student.objects.filter(academic_year=academic_year).all()
+            not_found_data = []
+            update_data = []
+
+            for index, row in df.iterrows():
+                studienr = row.get('Studienr')
+                exam_grade = str_to_bigint(row.get('exam_grade'))
+                
+                temp_student = None
+                temp_student = next((s for s in all_db_data if s.studienr == studienr), None)
+                if temp_student is None:
+                    not_found_data.append(studienr)
+                    continue
+                
+                temp_student.exam_grade = exam_grade
+                temp_student.modified_by = request.user
+                temp_student.modification_date_time = timezone.now()
+
+                update_data.append(temp_student)
+
+            row_count = len(df)
+            not_found_data_count = len(not_found_data)
+            modify_count = len(update_data)
+
+            if modify_count > 0:
+                Student.objects.bulk_update(update_data, ["exam_grade"
+                                                          , "modified_by"
+                                                          , "modification_date_time"
+                                                          ], batch_size=500)
+            
+            remarks = f"Successfully read {row_count}, modify rows {modify_count}, not found rows {not_found_data_count} rows from sheet '{sheet_name}'."
+            save_file_export_log(filename, remarks, row_count, 0, modify_count, not_found_data_count, 0, request.user)
+
+            return JsonResponse({
+                "success": True,
+                "message": remarks
+            })
+        except Exception as e:
+            return JsonResponse({"success": False, "error": f"Error reading sheet: {e}"})
+    return JsonResponse({"success": False, "error": "Missing file or sheet name."})
+
+@login_required(login_url='login')
+def upload_student_exam_grade_file(request):
+    template_name = 'main/upload_student_exam_grade.html'
     academic_year = get_active_academic_year()
     form = UploadFileForm()
 

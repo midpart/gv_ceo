@@ -62,6 +62,7 @@ class AllData:
     campus: str
     subscription_key: str
     age_in_year: int
+    exam_grade: int
     gender: str
     academic_year: int
     cpl_data: bool = None
