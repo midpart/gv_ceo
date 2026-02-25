@@ -238,7 +238,7 @@ LEFT JOIN main_simulation2survey sy ON sy.team_id = sc.team_id AND sy.student_id
     # execute safely
     with connection.cursor() as cursor:
         #print(cursor.mogrify(sql, params))
-        print(get_sql_debug(sql, params))  # for debugging only
+        #print(get_sql_debug(sql, params))  # for debugging only
         cursor.execute(sql, params)
         #rows = cursor.fetchall()
         rows = dictfetchall(cursor)
@@ -323,7 +323,7 @@ INNER JOIN main_simulation s ON s.id = t.simulation_id
     # execute safely
     with connection.cursor() as cursor:
         #print(cursor.mogrify(sql, params))
-        print(get_sql_debug(sql, params))  # for debugging only
+        #print(get_sql_debug(sql, params))  # for debugging only
         cursor.execute(sql, params)
         #rows = cursor.fetchall()
         rows = dictfetchall(cursor)
