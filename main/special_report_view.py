@@ -24,17 +24,19 @@ import tempfile
 def download_special_report(request):
     template_name = 'main/download_special_report.html' 
     simulations = Simulation.objects.all()
+    academic_year = get_active_academic_year()
 
-    return render(request, template_name, {'simulations': simulations})
+    return render(request, template_name, {'simulations': simulations, 'academic_year': academic_year})
 
 @csrf_exempt
 def process_download_special_report(request):
     if request.method == "POST" and request.FILES.get("file"):
         excel_file = request.FILES["file"]
         simulation_id = request.POST.get("simulation_id")
+        academic_year = get_active_academic_year()
         try:
             check_file(excel_file)
-            simulation_obj = Simulation.objects.filter(pk = simulation_id).first()
+            simulation_obj = Simulation.objects.filter(pk = simulation_id, academic_year=academic_year).first()
             if simulation_obj is None:
                 raise ValueError(f"Unable to find simulation with id : {simulation_id}")
             
@@ -46,9 +48,10 @@ def process_download_special_report(request):
             df = pd.read_csv(tmp_path, encoding='cp1252', sep=";")
             
             filename = excel_file.name
-            all_students = Student.objects.all()
+            all_students = Student.objects.filter(academic_year=academic_year).all()
             filters = {
                     "simulation_id": simulation_obj.id,
+                    "academic_year": academic_year
                 }
             all_score_report = get_student_score_report(filters)
             new_rows = []
